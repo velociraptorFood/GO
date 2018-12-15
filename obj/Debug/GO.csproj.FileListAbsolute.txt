@@ -1,0 +1,7 @@
+C:\Users\Bram\Documents\Uni\Opt\GO\GO\GO\bin\Debug\GO.exe.config
+C:\Users\Bram\Documents\Uni\Opt\GO\GO\GO\bin\Debug\GO.exe
+C:\Users\Bram\Documents\Uni\Opt\GO\GO\GO\bin\Debug\GO.pdb
+C:\Users\Bram\Documents\Uni\Opt\GO\GO\GO\obj\Debug\GO.csprojResolveAssemblyReference.cache
+C:\Users\Bram\Documents\Uni\Opt\GO\GO\GO\obj\Debug\GO.csproj.CoreCompileInputs.cache
+C:\Users\Bram\Documents\Uni\Opt\GO\GO\GO\obj\Debug\GO.exe
+C:\Users\Bram\Documents\Uni\Opt\GO\GO\GO\obj\Debug\GO.pdb
