@@ -12,13 +12,17 @@ namespace GO
         static Tuple<int, int>[,] afstanden;
         static int capacity = 20000;
 
+        //Ophalen orderlijst en bedrijvennetwerk uit bijbehorende bestanden
+        static string[] orders = System.IO.File.ReadAllLines(@"../../orders.txt");
+        static string[] bedrijvennetwerk = System.IO.File.ReadAllLines(@"../../bedrijven.txt");
+
         static void Main()
         {
             orderList = new Order[1177];
-            string input = Console.ReadLine();
+
             for (int i = 0; i < 1177; i++)
             {
-                string[] split = input.Split(';');
+                string[] split = orders[i].Split(';');
                 Order newOrder = new Order();
                 newOrder.id = int.Parse(split[0]);                     newOrder.plaats = split[1].Trim();
                 newOrder.freq = int.Parse(split[2][0].ToString());     newOrder.aantContainers = int.Parse(split[3]);
@@ -26,21 +30,18 @@ namespace GO
                 newOrder.x = int.Parse(split[7]);                      newOrder.y = int.Parse(split[8]);
                 newOrder.matrixID = int.Parse(split[6]);
                 orderList[i] = newOrder;
-                input = Console.ReadLine();
             }
             
             //afstanden[punt A, punt B] = (afstand, rijtijd)
             afstanden = new Tuple<int, int>[1099, 1099];
-            Console.ReadLine();
-            input = Console.ReadLine();
-            while (!String.IsNullOrEmpty(input))
+            for (int i = 0; i < bedrijvennetwerk.Length; i++)
             {
-                string[] split = input.Split(';');
+                string[] split = bedrijvennetwerk[i].Split(';');
                 afstanden[int.Parse(split[0]), int.Parse(split[1])] = new Tuple<int, int>(int.Parse(split[2]), int.Parse(split[3]));
-                input = Console.ReadLine();
             }
 
             Console.WriteLine(Eval(Start()));
+            Console.ReadLine();
         }
 
         static List<Order> Start()

@@ -5,3 +5,10 @@ C:\Users\Bram\Documents\Uni\Opt\GO\GO\GO\obj\Debug\GO.csprojResolveAssemblyRefer
 C:\Users\Bram\Documents\Uni\Opt\GO\GO\GO\obj\Debug\GO.csproj.CoreCompileInputs.cache
 C:\Users\Bram\Documents\Uni\Opt\GO\GO\GO\obj\Debug\GO.exe
 C:\Users\Bram\Documents\Uni\Opt\GO\GO\GO\obj\Debug\GO.pdb
+C:\Users\rickb\OneDrive\Documents\GitHub\GO\bin\Debug\GO.exe.config
+C:\Users\rickb\OneDrive\Documents\GitHub\GO\bin\Debug\GO.exe
+C:\Users\rickb\OneDrive\Documents\GitHub\GO\bin\Debug\GO.pdb
+C:\Users\rickb\OneDrive\Documents\GitHub\GO\obj\Debug\GO.csprojResolveAssemblyReference.cache
+C:\Users\rickb\OneDrive\Documents\GitHub\GO\obj\Debug\GO.csproj.CoreCompileInputs.cache
+C:\Users\rickb\OneDrive\Documents\GitHub\GO\obj\Debug\GO.exe
+C:\Users\rickb\OneDrive\Documents\GitHub\GO\obj\Debug\GO.pdb
