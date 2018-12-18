@@ -44,7 +44,6 @@ namespace GO
             }
 
             Console.WriteLine(Start());
-            Console.ReadLine();
         }
 
         static float Start()
@@ -57,10 +56,10 @@ namespace GO
                 {
                     orderFreqs.Add(orderList[i].id, new Tuple<int, int, int, float>(orderList[i].freq, 0, 0, orderList[i].ledigingsDuur * 3));
                     for (int j = 0; j < orderList[i].freq; j++)
-                        auto1.Add(orderList[i]);
+                        auto1.Add(orderList[i].Clone());
                 }
                 else
-                    auto1.Add(orderList[i]);
+                    auto1.Add(orderList[i].Clone());
             }
             for (int i = orderList.Length / 2; i < orderList.Length; i++)
             {
@@ -68,23 +67,81 @@ namespace GO
                 {
                     orderFreqs.Add(orderList[i].id, new Tuple<int, int, int, float>(orderList[i].freq, 0, 0, orderList[i].ledigingsDuur * 3));
                     for (int j = 0; j < orderList[i].freq; j++)
-                        auto2.Add(orderList[i]);
+                        auto2.Add(orderList[i].Clone());
                 }
                 else
-                    auto2.Add(orderList[i]);
+                    auto2.Add(orderList[i].Clone());
             }
-        
-            return Eval(auto1) + Eval(auto2);
+            return Iterate(auto1, auto2, 50000);
+        }
+
+        static float Iterate(List<Order> auto1, List<Order> auto2, int limit)
+        {
+            float minScore, c = 1f; int k = 0;
+            Random r = new Random();
+            minScore = Eval(auto1) + Eval(auto2);
+            while (k < limit)
+            {
+                List<Order> newAuto1 = GenerateNeighbour(auto1), newAuto2 = GenerateNeighbour(auto2);
+                float newScore = Eval(newAuto1) + Eval(newAuto2);
+                if (newScore <= minScore)
+                {
+                    auto1 = CloneList(newAuto1);
+                    auto2 = CloneList(newAuto2);
+                    minScore = newScore;
+                    //Console.WriteLine(newScore);
+                }
+                else if (Math.Exp(newScore - minScore) / c > r.Next(0, 2))
+                {
+                    auto1 = CloneList(newAuto1);
+                    auto2 = CloneList(newAuto2);
+                    //Console.WriteLine(newScore);
+                }
+                k++;
+            }
+            return minScore;
+
+        }
+
+        static List<Order> GenerateNeighbour(List<Order> input)
+        {
+            List<Order> nb = CloneList(input);
+            Random rnd = new Random();
+            for(int i = 0; i < 10; i++)
+            {
+                Swap(nb, rnd.Next(0, input.Count), rnd.Next(0, input.Count));
+            }
+            return nb;
+        }
+
+        static List<Order> CloneList(List<Order> input)
+        {
+            List<Order> newList = new List<Order>();
+            foreach (Order o in input)
+            {
+                newList.Add(o.Clone());
+            }
+            return newList;
+        }
+
+        static List<Order> Swap(List<Order> input, int x, int y)
+        {
+            List<Order> output = input;
+            Order temp = output[x];
+            output[x] = output[y];
+            output[y] = temp;
+            return output;
         }
 
         static float Eval(List<Order> input)
         {
             int day = 1;
-            float time = 0, score = 0, currentLoad = 0;   
+            float time = 0, score = 0, currentLoad = 0;
             for (int i = 0; i < input.Count - 1; i++)
             {
+                int id = input[i].matrixID, nextID = input[i + 1].matrixID;
                 if (time == 0)
-                    time += afstanden[287, input[i].matrixID].Item2;
+                    time += afstanden[287, id].Item2;
 
                 //als er meerdere keren opgehaald moet worden
                 if (orderFreqs.ContainsKey(input[i].id))
@@ -111,13 +168,14 @@ namespace GO
                     currentLoad += input[i].volume * 0.2f;
                 }
 
-                float nextDestTime = afstanden[input[i].matrixID, input[i++].matrixID].Item2;
+                float nextDestTime = afstanden[id, nextID].Item2;
+                float toStortTime = afstanden[id, 287].Item2;
 
                 //720 min per dag zijn de autos beschikbaar
-                if (time + nextDestTime + afstanden[input[i++].matrixID, 287].Item2 + 30 >= 720)
+                if (time + nextDestTime + afstanden[nextID, 287].Item2 + 30 >= 720)
                 {
                     //terug naar stort aan het eind van de dag
-                    time += afstanden[input[i].matrixID, 287].Item2 + 30;
+                    time += toStortTime + 30;
                     score += time;
                     currentLoad = 0;
                     time = 0;
@@ -126,13 +184,22 @@ namespace GO
                     else
                         day++;
                 }
-                else if (currentLoad + input[i++].volume * 0.2f > capacity)
+                else if (currentLoad + input[i+1].volume * 0.2f > capacity)
                 {
                     //naar stort en storten
-                    time += afstanden[input[i].matrixID, 287].Item2 + 30;
+                    time += toStortTime + 30;
                     currentLoad = 0;
                     //naar volgende bestemming
-                    time += afstanden[287, input[i++].matrixID].Item2;
+                    time += afstanden[287, nextID].Item2;
+                }
+                //storten als het onderweg kan 
+                else if(nextDestTime >= toStortTime + afstanden[287, nextID].Item2)
+                {
+                    //naar stort en storten
+                    time += toStortTime + 30;
+                    currentLoad = 0;
+                    //naar volgende bestemming
+                    time += afstanden[287, nextID].Item2;
                 }
                 else
                     time += nextDestTime;                
