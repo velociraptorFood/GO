@@ -44,7 +44,7 @@ namespace GO
                 afstanden[int.Parse(split[0]), int.Parse(split[1])] = new Tuple<int, int>(int.Parse(split[2]), int.Parse(split[3]));
             }
 
-            Console.WriteLine(Start());
+            Console.WriteLine(StartSmart());
         }
 
         static float Start()
@@ -73,12 +73,80 @@ namespace GO
                 else
                     auto2.Add(orderList[i].Clone());
             }
-            return Iterate(auto1, auto2, 100000);
+            return Iterate(auto1, auto2, 1000000);
+        }
+
+        static float StartSmart()
+        {
+            List<Order> auto1 = new List<Order>(), auto2 = new List<Order>();
+            List<Order> sortedList = ShortestTimeSort(orderList);
+
+            for (int i = 0; i < orderList.Length / 2; i++)
+            {
+                auto1.Add(orderList[i].Clone());
+            }
+            for (int i = orderList.Length / 2; i < orderList.Length; i++)
+            {                
+                auto2.Add(orderList[i].Clone());
+            }
+
+            auto1 = ShortestTimeSort(auto1.ToArray());
+            auto2 = ShortestTimeSort(auto2.ToArray());
+
+            foreach (Order o in auto1)
+            {
+                if (o.freq > 1)
+                {
+                    orderFreqs.Add(o.id, new Tuple<int, int, int, float>(o.freq, 0, 0, o.ledigingsDuur * 3));
+                    for (int j = 1; j < o.freq; j++)
+                        auto1.Add(o.Clone());
+                }
+            }
+            foreach (Order o in auto2)
+            {
+                if (o.freq > 1)
+                {
+                    orderFreqs.Add(o.id, new Tuple<int, int, int, float>(o.freq, 0, 0, o.ledigingsDuur * 3));
+                    for (int j = 1; j < o.freq; j++)
+                        auto2.Add(o.Clone());
+                }
+            }
+
+            return Iterate(auto1, auto2, 1000000);
+        }
+
+        static List<Order> ShortestTimeSort(Order[] input)
+        {
+            List<Order> sortedList = new List<Order>();
+            Order best = new Order();
+            int curLoc = 287, nextLoc = 287;
+            int minTime, curTime;
+            for (int i = 0; i < input.Length; i++)
+            {
+                minTime = int.MaxValue;
+                foreach (Order o in orderList)
+                {
+                    if (o.matrixID != curLoc)
+                    {
+                        curTime = afstanden[curLoc, o.matrixID].Item2;
+                        if (curTime < minTime)
+                        {
+                            minTime = curTime;
+                            nextLoc = o.matrixID;
+                            best = o;
+                        }
+                    }
+                }
+                curLoc = nextLoc;
+                sortedList.Add(best);
+            }
+            return sortedList;
         }
 
         static float Iterate(List<Order> auto1, List<Order> auto2, int limit)
         {
-            float minScore, c = 0.8f; int k = 0;
+            float minScore, t0 = 2, t = 0;
+            int k = 0;
             Random r = new Random();
             minScore = Eval(auto1) + Eval(auto2);
             List<Order> bestAuto1 = new List<Order>(), bestAuto2 = new List<Order>();
@@ -98,14 +166,16 @@ namespace GO
                         Console.WriteLine(newScore);
                     }
                 }
-                else if (Math.Exp(newScore - minScore) / c > r.Next(0, 2))
+                else if (Math.Exp(newScore - minScore) / t > r.Next(0, 2))
                 {
                     auto1 = CloneList(newAuto1);
                     auto2 = CloneList(newAuto2);
                     //Console.WriteLine(newScore);
                 }
                 k++;
+                t = t0 * (float)Math.Pow(0.95, k);
             }
+
             return minScore;
 
         }
@@ -115,7 +185,7 @@ namespace GO
             List<Order> nb1 = CloneList(input1); List<Order> nb2 = CloneList(input2);
             Random rnd = new Random();
             int index;
-            for(int i = 0; i < 30; i++)
+            for(int i = 0; i < 2; i++)
             {
                 switch (rnd.Next(0, 9))
                 {
