@@ -11,6 +11,7 @@ namespace GO
         static Order[] orderList;
         static Tuple<int, int>[,] afstanden;
         static int capacity = 20000;
+        static int orderCount;
 
         //<orderID, <freq, prevDay, timesPickedUp, strafkosten>>
         static Dictionary<int, Tuple<int, int, int, float>> orderFreqs = new Dictionary<int, Tuple<int, int, int, float>>();
@@ -35,7 +36,12 @@ namespace GO
                 newOrder.matrixID = int.Parse(split[6]);
                 orderList[i] = newOrder;
             }
-            
+
+            foreach(Order o in orderList)
+            {
+                orderCount += o.freq;
+            }
+
             //afstanden[punt A, punt B] = (afstand, rijtijd)
             afstanden = new Tuple<int, int>[1099, 1099];
             for (int i = 0; i < bedrijvennetwerk.Length; i++)
@@ -55,7 +61,7 @@ namespace GO
             {
                 if (orderList[i].freq > 1)
                 {
-                    orderFreqs.Add(orderList[i].id, new Tuple<int, int, int, float>(orderList[i].freq, 0, 0, orderList[i].ledigingsDuur * 3));
+                    orderFreqs.Add(orderList[i].id, new Tuple<int, int, int, float>(orderList[i].freq, 0, 0, orderList[i].ledigingsDuur));
                     for (int j = 0; j < orderList[i].freq; j++)
                         auto1.Add(orderList[i].Clone());
                 }
@@ -66,7 +72,7 @@ namespace GO
             {
                 if (orderList[i].freq > 1)
                 {
-                    orderFreqs.Add(orderList[i].id, new Tuple<int, int, int, float>(orderList[i].freq, 0, 0, orderList[i].ledigingsDuur * 3));
+                    orderFreqs.Add(orderList[i].id, new Tuple<int, int, int, float>(orderList[i].freq, 0, 0, orderList[i].ledigingsDuur));
                     for (int j = 0; j < orderList[i].freq; j++)
                         auto2.Add(orderList[i].Clone());
                 }
@@ -79,65 +85,66 @@ namespace GO
         static float StartSmart()
         {
             List<Order> auto1 = new List<Order>(), auto2 = new List<Order>();
-            List<Order> sortedList = ShortestTimeSort(orderList);
 
             for (int i = 0; i < orderList.Length / 2; i++)
             {
                 auto1.Add(orderList[i].Clone());
             }
             for (int i = orderList.Length / 2; i < orderList.Length; i++)
-            {                
+            {
                 auto2.Add(orderList[i].Clone());
             }
 
-            auto1 = ShortestTimeSort(auto1.ToArray());
-            auto2 = ShortestTimeSort(auto2.ToArray());
-
-            foreach (Order o in auto1)
+            auto1 = ShortestTimeSort(CloneList(auto1));
+            int max = auto1.Count;
+            for (int i = 0; i < max; i++)
             {
-                if (o.freq > 1)
+                if (auto1[i].freq > 1)
                 {
-                    orderFreqs.Add(o.id, new Tuple<int, int, int, float>(o.freq, 0, 0, o.ledigingsDuur * 3));
-                    for (int j = 1; j < o.freq; j++)
-                        auto1.Add(o.Clone());
-                }
-            }
-            foreach (Order o in auto2)
-            {
-                if (o.freq > 1)
-                {
-                    orderFreqs.Add(o.id, new Tuple<int, int, int, float>(o.freq, 0, 0, o.ledigingsDuur * 3));
-                    for (int j = 1; j < o.freq; j++)
-                        auto2.Add(o.Clone());
+                    orderFreqs.Add(auto1[i].id, new Tuple<int, int, int, float>(auto1[i].freq, 0, 0, auto1[i].ledigingsDuur));
+                    for (int j = 1; j < auto1[i].freq; j++)
+                        auto1.Add(auto1[i].Clone());
                 }
             }
 
-            return Iterate(auto1, auto2, 1000000);
+            auto2 = ShortestTimeSort(CloneList(auto2));
+            max = auto2.Count;
+            for (int i = 0; i < max; i++)
+            {
+                if (auto2[i].freq > 1)
+                {
+                    orderFreqs.Add(auto2[i].id, new Tuple<int, int, int, float>(auto2[i].freq, 0, 0, auto2[i].ledigingsDuur));
+                    for (int j = 1; j < auto2[i].freq; j++)
+                        auto2.Add(auto2[i].Clone());
+                }
+            }
+
+            return Iterate(auto1, auto2, 1000);
         }
 
-        static List<Order> ShortestTimeSort(Order[] input)
+        static List<Order> ShortestTimeSort(List<Order> input)
         {
             List<Order> sortedList = new List<Order>();
             Order best = new Order();
             int curLoc = 287, nextLoc = 287;
             int minTime, curTime;
-            for (int i = 0; i < input.Length; i++)
+            foreach(Order o_ in input)
             {
                 minTime = int.MaxValue;
-                foreach (Order o in orderList)
+                foreach (Order o in input)
                 {
-                    if (o.matrixID != curLoc)
+                    if (!sortedList.Any(f => f.id == o.id))
                     {
                         curTime = afstanden[curLoc, o.matrixID].Item2;
-                        if (curTime < minTime)
+                        if (curTime <= minTime)
                         {
                             minTime = curTime;
                             nextLoc = o.matrixID;
-                            best = o;
+                            best = o.Clone();
                         }
                     }
                 }
-                curLoc = nextLoc;
+                curLoc = nextLoc;                
                 sortedList.Add(best);
             }
             return sortedList;
@@ -175,7 +182,7 @@ namespace GO
                 k++;
                 t = t0 * (float)Math.Pow(0.95, k);
             }
-
+            Console.WriteLine((bestAuto1.Count + bestAuto2.Count) + " " + removed.Count);
             return minScore;
 
         }
@@ -185,10 +192,11 @@ namespace GO
             List<Order> nb1 = CloneList(input1); List<Order> nb2 = CloneList(input2);
             Random rnd = new Random();
             int index;
-            for(int i = 0; i < 2; i++)
+            for(int i = 0; i < 1; i++)
             {
                 switch (rnd.Next(0, 9))
                 {
+
                     case 0:
                         Swap(nb1, rnd.Next(0, nb1.Count), rnd.Next(0, nb1.Count));
                         break;
@@ -198,6 +206,7 @@ namespace GO
                     case 2:
                         SwapBetween(nb1, nb2, rnd.Next(0, nb1.Count), rnd.Next(0, nb2.Count));
                         break;
+                    
                     case 3:
                         if (nb1.Count > 1)
                         {
@@ -213,12 +222,12 @@ namespace GO
                             nb1.Add(nb2[index].Clone());
                             nb2.RemoveAt(index);
                         }
-                        break;
+                        break;                    
                     case 5:
                         if(nb1.Count > 1)
                         {
                             index = rnd.Next(0,nb1.Count);
-                            removed.Add(nb1[index]);
+                            removed.Add(nb1[index].Clone());
                             nb1.RemoveAt(index);
                         }
                         break;
@@ -226,15 +235,18 @@ namespace GO
                         if (nb2.Count > 1)
                         {
                             index = rnd.Next(0, nb2.Count);
-                            removed.Add(nb2[index]);
+                            removed.Add(nb2[index].Clone());
                             nb2.RemoveAt(index);
                         }
                         break;
+                    //bugged
+                    //makes orders disappear
+                    /*
                     case 7:
                         if (removed.Count > 0)
                         { 
                             index = rnd.Next(0, removed.Count);
-                            nb1.Add(removed[index]);
+                            nb1.Add(removed[index].Clone());
                             removed.RemoveAt(index);
                         }
                         break;
@@ -242,10 +254,11 @@ namespace GO
                         if (removed.Count > 0)
                         { 
                             index = rnd.Next(0, removed.Count);
-                            nb2.Add(removed[index]);
+                            nb2.Add(removed[index].Clone());
                             removed.RemoveAt(index);
                         }
-                        break;
+                        break;*/
+                       
                 }
             }
             return new Tuple<List<Order>, List<Order>>(nb1, nb2);
@@ -263,7 +276,7 @@ namespace GO
 
         static List<Order> Swap(List<Order> input, int x, int y)
         {
-            List<Order> output = input;
+            List<Order> output = CloneList(input);
             if (x != y)
             {
                 Order temp = output[x];
@@ -275,7 +288,7 @@ namespace GO
 
         static Tuple<List<Order>, List<Order>> SwapBetween(List<Order> input1, List<Order> input2, int x, int y)
         {
-            List<Order> output1 = input1, output2 = input2;
+            List<Order> output1 = CloneList(input1), output2 = CloneList(input2);
             Order temp = output1[x];
             output1[x] = output2[y];
             output2[y] = temp;
@@ -287,7 +300,7 @@ namespace GO
             int day = 1;
             float time = 0, score = 0, currentLoad = 0;
             for (int i = 0; i < input.Count - 1; i++)
-            {
+            {                 
                 int id = input[i].matrixID, nextID = input[i + 1].matrixID;
                 if (time == 0)
                     time += afstanden[287, id].Item2;
@@ -358,7 +371,7 @@ namespace GO
             foreach(Tuple<int, int, int, float> val in orderFreqs.Values)
             {
                 if (val.Item1 != val.Item3)
-                    score += val.Item4;
+                    score += val.Item4 * 3;
             }
             foreach (Order o in removed)
             {
