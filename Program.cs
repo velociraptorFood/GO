@@ -14,6 +14,7 @@ namespace GO
 
         //<orderID, <freq, prevDay, timesPickedUp, strafkosten>>
         static Dictionary<int, Tuple<int, int, int, float>> orderFreqs = new Dictionary<int, Tuple<int, int, int, float>>();
+        static List<Order> removed = new List<Order>();
 
         //Ophalen orderlijst en bedrijvennetwerk uit bijbehorende bestanden
         static string[] orders = System.IO.File.ReadAllLines(@"../../orders.txt");
@@ -72,24 +73,30 @@ namespace GO
                 else
                     auto2.Add(orderList[i].Clone());
             }
-            return Iterate(auto1, auto2, 50000);
+            return Iterate(auto1, auto2, 100000);
         }
 
         static float Iterate(List<Order> auto1, List<Order> auto2, int limit)
         {
-            float minScore, c = 1f; int k = 0;
+            float minScore, c = 0.8f; int k = 0;
             Random r = new Random();
             minScore = Eval(auto1) + Eval(auto2);
+            List<Order> bestAuto1 = new List<Order>(), bestAuto2 = new List<Order>();
             while (k < limit)
             {
-                List<Order> newAuto1 = GenerateNeighbour(auto1), newAuto2 = GenerateNeighbour(auto2);
+                Tuple<List<Order>, List<Order>> newAutos = GenerateNeighbours(auto1, auto2);
+                List<Order> newAuto1 = newAutos.Item1, newAuto2 = newAutos.Item2;
                 float newScore = Eval(newAuto1) + Eval(newAuto2);
-                if (newScore <= minScore)
+                if (newScore <= Eval(auto1) + Eval(auto2))
                 {
                     auto1 = CloneList(newAuto1);
                     auto2 = CloneList(newAuto2);
-                    minScore = newScore;
-                    //Console.WriteLine(newScore);
+                    if (newScore < minScore)
+                    {
+                        minScore = newScore;
+                        bestAuto1 = CloneList(auto1); bestAuto2 = CloneList(auto2);
+                        Console.WriteLine(newScore);
+                    }
                 }
                 else if (Math.Exp(newScore - minScore) / c > r.Next(0, 2))
                 {
@@ -103,15 +110,75 @@ namespace GO
 
         }
 
-        static List<Order> GenerateNeighbour(List<Order> input)
+        static Tuple<List<Order>,List<Order>> GenerateNeighbours(List<Order> input1, List <Order> input2)
         {
-            List<Order> nb = CloneList(input);
+            List<Order> nb1 = CloneList(input1); List<Order> nb2 = CloneList(input2);
             Random rnd = new Random();
-            for(int i = 0; i < 10; i++)
+            int index;
+            for(int i = 0; i < 30; i++)
             {
-                Swap(nb, rnd.Next(0, input.Count), rnd.Next(0, input.Count));
+                switch (rnd.Next(0, 9))
+                {
+                    case 0:
+                        Swap(nb1, rnd.Next(0, nb1.Count), rnd.Next(0, nb1.Count));
+                        break;
+                    case 1:
+                        Swap(nb2, rnd.Next(0, nb2.Count), rnd.Next(0, nb2.Count));
+                        break;
+                    case 2:
+                        SwapBetween(nb1, nb2, rnd.Next(0, nb1.Count), rnd.Next(0, nb2.Count));
+                        break;
+                    case 3:
+                        if (nb1.Count > 1)
+                        {
+                            index = rnd.Next(0, nb1.Count);
+                            nb2.Add(nb1[index].Clone());
+                            nb1.RemoveAt(index);
+                        }
+                        break;
+                    case 4:
+                        if (nb2.Count > 1)
+                        {
+                            index = rnd.Next(0, nb2.Count);
+                            nb1.Add(nb2[index].Clone());
+                            nb2.RemoveAt(index);
+                        }
+                        break;
+                    case 5:
+                        if(nb1.Count > 1)
+                        {
+                            index = rnd.Next(0,nb1.Count);
+                            removed.Add(nb1[index]);
+                            nb1.RemoveAt(index);
+                        }
+                        break;
+                    case 6:
+                        if (nb2.Count > 1)
+                        {
+                            index = rnd.Next(0, nb2.Count);
+                            removed.Add(nb2[index]);
+                            nb2.RemoveAt(index);
+                        }
+                        break;
+                    case 7:
+                        if (removed.Count > 0)
+                        { 
+                            index = rnd.Next(0, removed.Count);
+                            nb1.Add(removed[index]);
+                            removed.RemoveAt(index);
+                        }
+                        break;
+                    case 8:
+                        if (removed.Count > 0)
+                        { 
+                            index = rnd.Next(0, removed.Count);
+                            nb2.Add(removed[index]);
+                            removed.RemoveAt(index);
+                        }
+                        break;
+                }
             }
-            return nb;
+            return new Tuple<List<Order>, List<Order>>(nb1, nb2);
         }
 
         static List<Order> CloneList(List<Order> input)
@@ -127,10 +194,22 @@ namespace GO
         static List<Order> Swap(List<Order> input, int x, int y)
         {
             List<Order> output = input;
-            Order temp = output[x];
-            output[x] = output[y];
-            output[y] = temp;
+            if (x != y)
+            {
+                Order temp = output[x];
+                output[x] = output[y];
+                output[y] = temp;
+            }
             return output;
+        }
+
+        static Tuple<List<Order>, List<Order>> SwapBetween(List<Order> input1, List<Order> input2, int x, int y)
+        {
+            List<Order> output1 = input1, output2 = input2;
+            Order temp = output1[x];
+            output1[x] = output2[y];
+            output2[y] = temp;
+            return new Tuple<List<Order>, List<Order>>(output1, output2);
         }
 
         static float Eval(List<Order> input)
@@ -210,6 +289,13 @@ namespace GO
             {
                 if (val.Item1 != val.Item3)
                     score += val.Item4;
+            }
+            foreach (Order o in removed)
+            {
+                if(!orderFreqs.ContainsKey(o.id))
+                {
+                    score += o.ledigingsDuur * 3;
+                }
             }
 
             return score;
