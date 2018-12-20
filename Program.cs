@@ -53,6 +53,7 @@ namespace GO
             Console.WriteLine(StartSmart());
         }
 
+        //start zonder "slim" een basisoplossing te genereren
         static float Start()
         {
             List<Order> auto1 = new List<Order>(), auto2 = new List<Order>();
@@ -82,6 +83,8 @@ namespace GO
             return Iterate(auto1, auto2, 1000000);
         }
 
+        //gebruik ShortestTimeSort() om de 2 opgedeelde delen greedy te sorten
+        //voegt ook voor orders met freq > 1 data toe aan een dict zodat er bijgehouden kan worden of deze orders goed behandeld worden
         static float StartSmart()
         {
             List<Order> auto1 = new List<Order>(), auto2 = new List<Order>();
@@ -119,9 +122,10 @@ namespace GO
                 }
             }
 
-            return Iterate(auto1, auto2, 1000);
+            return Iterate(auto1, auto2, 100000);
         }
 
+        //zoek steeds de dichtstbijzijnde locatie en voeg die toe als volgende in de list
         static List<Order> ShortestTimeSort(List<Order> input)
         {
             List<Order> sortedList = new List<Order>();
@@ -150,6 +154,7 @@ namespace GO
             return sortedList;
         }
 
+        //gebruik simulated annealing om een oplossing te vinden
         static float Iterate(List<Order> auto1, List<Order> auto2, int limit)
         {
             float minScore, t0 = 2, t = 0;
@@ -187,83 +192,86 @@ namespace GO
 
         }
 
+        //genereer nbs voor de 2 input lijsten door:
         static Tuple<List<Order>,List<Order>> GenerateNeighbours(List<Order> input1, List <Order> input2)
         {
             List<Order> nb1 = CloneList(input1); List<Order> nb2 = CloneList(input2);
             Random rnd = new Random();
             int index;
-            for(int i = 0; i < 1; i++)
+            switch (rnd.Next(0, 9))
             {
-                switch (rnd.Next(0, 9))
-                {
-
-                    case 0:
-                        Swap(nb1, rnd.Next(0, nb1.Count), rnd.Next(0, nb1.Count));
-                        break;
-                    case 1:
-                        Swap(nb2, rnd.Next(0, nb2.Count), rnd.Next(0, nb2.Count));
-                        break;
-                    case 2:
-                        SwapBetween(nb1, nb2, rnd.Next(0, nb1.Count), rnd.Next(0, nb2.Count));
-                        break;
-                    
-                    case 3:
-                        if (nb1.Count > 1)
-                        {
-                            index = rnd.Next(0, nb1.Count);
-                            nb2.Add(nb1[index].Clone());
-                            nb1.RemoveAt(index);
-                        }
-                        break;
-                    case 4:
-                        if (nb2.Count > 1)
-                        {
-                            index = rnd.Next(0, nb2.Count);
-                            nb1.Add(nb2[index].Clone());
-                            nb2.RemoveAt(index);
-                        }
-                        break;                    
-                    case 5:
-                        if(nb1.Count > 1)
-                        {
-                            index = rnd.Next(0,nb1.Count);
-                            removed.Add(nb1[index].Clone());
-                            nb1.RemoveAt(index);
-                        }
-                        break;
-                    case 6:
-                        if (nb2.Count > 1)
-                        {
-                            index = rnd.Next(0, nb2.Count);
-                            removed.Add(nb2[index].Clone());
-                            nb2.RemoveAt(index);
-                        }
-                        break;
-                    //bugged
-                    //makes orders disappear
-                    /*
-                    case 7:
-                        if (removed.Count > 0)
-                        { 
-                            index = rnd.Next(0, removed.Count);
-                            nb1.Add(removed[index].Clone());
-                            removed.RemoveAt(index);
-                        }
-                        break;
-                    case 8:
-                        if (removed.Count > 0)
-                        { 
-                            index = rnd.Next(0, removed.Count);
-                            nb2.Add(removed[index].Clone());
-                            removed.RemoveAt(index);
-                        }
-                        break;*/
+                //swap orders binnen lijst
+                case 0:
+                    Swap(nb1, rnd.Next(0, nb1.Count), rnd.Next(0, nb1.Count));
+                    break;
+                case 1:
+                    Swap(nb2, rnd.Next(0, nb2.Count), rnd.Next(0, nb2.Count));
+                    break;
+                //swap orders tussen de lijsten
+                case 2:
+                    SwapBetween(nb1, nb2, rnd.Next(0, nb1.Count), rnd.Next(0, nb2.Count));
+                    break;
+                //haal order uit lijst 1 en voeg toe aan lijst 2 
+                case 3:
+                    if (nb1.Count > 1)
+                    {
+                        index = rnd.Next(0, nb1.Count);
+                        nb2.Add(nb1[index].Clone());
+                        nb1.RemoveAt(index);
+                    }
+                    break;
+                //omgekeerd
+                case 4:
+                    if (nb2.Count > 1)
+                    {
+                        index = rnd.Next(0, nb2.Count);
+                        nb1.Add(nb2[index].Clone());
+                        nb2.RemoveAt(index);
+                    }
+                    break;     
+                //verwijder uit lijst 1 wordt bijgehouden met list<> removed
+                case 5:
+                    if(nb1.Count > 1)
+                    {
+                        index = rnd.Next(0,nb1.Count);
+                        removed.Add(nb1[index].Clone());
+                        nb1.RemoveAt(index);
+                    }
+                    break;
+                //omgekeerd
+                case 6:
+                    if (nb2.Count > 1)
+                    {
+                        index = rnd.Next(0, nb2.Count);
+                        removed.Add(nb2[index].Clone());
+                        nb2.RemoveAt(index);
+                    }
+                    break;
+                //bugged
+                //makes orders disappear
+                /*
+                case 7:
+                    if (removed.Count > 0)
+                    { 
+                        index = rnd.Next(0, removed.Count);
+                        nb1.Add(removed[index].Clone());
+                        removed.RemoveAt(index);
+                    }
+                    break;
+                case 8:
+                    if (removed.Count > 0)
+                    { 
+                        index = rnd.Next(0, removed.Count);
+                        nb2.Add(removed[index].Clone());
+                        removed.RemoveAt(index);
+                    }
+                    break;*/
                        
-                }
             }
+            
             return new Tuple<List<Order>, List<Order>>(nb1, nb2);
         }
-
+        
         static List<Order> CloneList(List<Order> input)
         {
             List<Order> newList = new List<Order>();
@@ -273,7 +281,7 @@ namespace GO
             }
             return newList;
         }
-
+        
         static List<Order> Swap(List<Order> input, int x, int y)
         {
             List<Order> output = CloneList(input);
@@ -300,10 +308,13 @@ namespace GO
             int day = 1;
             float time = 0, score = 0, currentLoad = 0;
             for (int i = 0; i < input.Count - 1; i++)
-            {                 
+            {
+                float totalVolume = input[i].volume * input[i].aantContainers * 0.2f;
                 int id = input[i].matrixID, nextID = input[i + 1].matrixID;
                 if (time == 0)
                     time += afstanden[287, id].Item2;
+
+                //behandel eerst het ophalen van het afval van deze locatie
 
                 //als er meerdere keren opgehaald moet worden
                 if (orderFreqs.ContainsKey(input[i].id))
@@ -313,25 +324,27 @@ namespace GO
                     if(freqDayTimes.Item2 != 0 && day - freqDayTimes.Item2 == 5 - freqDayTimes.Item1 && freqDayTimes.Item1 != freqDayTimes.Item3 || freqDayTimes.Item1 == 5)
                     {
                         time += input[i].ledigingsDuur;
-                        currentLoad += input[i].volume * 0.2f;
+                        currentLoad += totalVolume;
                         orderFreqs[input[i].id] = new Tuple<int, int, int, float>(freqDayTimes.Item1, day, freqDayTimes.Item3 + 1, freqDayTimes.Item4);
                     }
                     //als er nog nooit is opgehaald
                     else if(freqDayTimes.Item2 == 0)
                     {
                         time += input[i].ledigingsDuur;
-                        currentLoad += input[i].volume * 0.2f;
+                        currentLoad += totalVolume;
                         orderFreqs[input[i].id] = new Tuple<int, int, int, float>(freqDayTimes.Item1, day, freqDayTimes.Item3 + 1, freqDayTimes.Item4);
                     }
                 }
                 else
                 {
                     time += input[i].ledigingsDuur;
-                    currentLoad += input[i].volume * 0.2f;
+                    currentLoad += totalVolume;
                 }
 
                 float nextDestTime = afstanden[id, nextID].Item2;
                 float toStortTime = afstanden[id, 287].Item2;
+
+                //kijk daarna naar wat de volgende bestemming wordt
 
                 //720 min per dag zijn de autos beschikbaar
                 if (time + nextDestTime + afstanden[nextID, 287].Item2 + 30 >= 720)
@@ -368,16 +381,19 @@ namespace GO
             }
             score += afstanden[input[input.Count - 1].matrixID, 287].Item2;
 
+            //strafpunten voor orders die niet vaak genoeg zijn opgehaald
             foreach(Tuple<int, int, int, float> val in orderFreqs.Values)
             {
                 if (val.Item1 != val.Item3)
-                    score += val.Item4 * 3;
+                    score += val.Item4 * 3f;
             }
+            //strafpunten voor orders die overgeslagen zijn 
+            //maar niet al hierboven behandeld zijn
             foreach (Order o in removed)
             {
                 if(!orderFreqs.ContainsKey(o.id))
                 {
-                    score += o.ledigingsDuur * 3;
+                    score += o.ledigingsDuur * 3f;
                 }
             }
 
