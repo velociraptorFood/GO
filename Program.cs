@@ -12,9 +12,10 @@ namespace GO
         static Tuple<int, int>[,] afstanden;
         static int capacity = 20000;
         static int orderCount;
+        static float totalStortTime;
 
-        //<orderID, <freq, prevDay, timesPickedUp, strafkosten>>
-        static Dictionary<int, Tuple<int, int, int, float>> orderFreqs = new Dictionary<int, Tuple<int, int, int, float>>();
+        //<orderID, <freq, kosten>>
+        static Dictionary<int, Tuple<int, float>> orderFreqs = new Dictionary<int, Tuple<int, float>>();
         static List<Order> removed = new List<Order>();
 
         //Ophalen orderlijst en bedrijvennetwerk uit bijbehorende bestanden
@@ -62,7 +63,7 @@ namespace GO
             {
                 if (orderList[i].freq > 1)
                 {
-                    orderFreqs.Add(orderList[i].id, new Tuple<int, int, int, float>(orderList[i].freq, 0, 0, orderList[i].ledigingsDuur));
+                    orderFreqs.Add(orderList[i].id, new Tuple<int, float>(orderList[i].freq, orderList[i].ledigingsDuur * orderList[i].aantContainers));
                     for (int j = 0; j < orderList[i].freq; j++)
                         auto1.Add(orderList[i].Clone());
                 }
@@ -73,7 +74,7 @@ namespace GO
             {
                 if (orderList[i].freq > 1)
                 {
-                    orderFreqs.Add(orderList[i].id, new Tuple<int, int, int, float>(orderList[i].freq, 0, 0, orderList[i].ledigingsDuur));
+                    orderFreqs.Add(orderList[i].id, new Tuple<int, float>(orderList[i].freq, orderList[i].ledigingsDuur * orderList[i].aantContainers));
                     for (int j = 0; j < orderList[i].freq; j++)
                         auto2.Add(orderList[i].Clone());
                 }
@@ -104,7 +105,7 @@ namespace GO
             {
                 if (auto1[i].freq > 1)
                 {
-                    orderFreqs.Add(auto1[i].id, new Tuple<int, int, int, float>(auto1[i].freq, 0, 0, auto1[i].ledigingsDuur));
+                    orderFreqs.Add(auto1[i].id, new Tuple<int, float>(auto1[i].freq, auto1[i].ledigingsDuur * auto1[i].aantContainers));
                     for (int j = 1; j < auto1[i].freq; j++)
                         auto1.Add(auto1[i].Clone());
                 }
@@ -116,13 +117,13 @@ namespace GO
             {
                 if (auto2[i].freq > 1)
                 {
-                    orderFreqs.Add(auto2[i].id, new Tuple<int, int, int, float>(auto2[i].freq, 0, 0, auto2[i].ledigingsDuur));
+                    orderFreqs.Add(auto2[i].id, new Tuple<int, float>(auto2[i].freq, auto2[i].ledigingsDuur * auto2[i].aantContainers));
                     for (int j = 1; j < auto2[i].freq; j++)
                         auto2.Add(auto2[i].Clone());
                 }
             }
 
-            return Iterate(auto1, auto2, 100000);
+            return Iterate(auto1, auto2, 1000);
         }
 
         //zoek steeds de dichtstbijzijnde locatie en voeg die toe als volgende in de list
@@ -160,14 +161,14 @@ namespace GO
             float minScore, t0 = 2, t = 0;
             int k = 0;
             Random r = new Random();
-            minScore = Eval(auto1) + Eval(auto2);
+            minScore = Eval(auto1, auto2);
             List<Order> bestAuto1 = new List<Order>(), bestAuto2 = new List<Order>();
             while (k < limit)
             {
                 Tuple<List<Order>, List<Order>> newAutos = GenerateNeighbours(auto1, auto2);
                 List<Order> newAuto1 = newAutos.Item1, newAuto2 = newAutos.Item2;
-                float newScore = Eval(newAuto1) + Eval(newAuto2);
-                if (newScore <= Eval(auto1) + Eval(auto2))
+                float newScore = Eval(newAuto1, newAuto2);
+                if (newScore <= Eval(auto1, auto2))
                 {
                     auto1 = CloneList(newAuto1);
                     auto2 = CloneList(newAuto2);
@@ -188,8 +189,31 @@ namespace GO
                 t = t0 * (float)Math.Pow(0.95, k);
             }
             Console.WriteLine((bestAuto1.Count + bestAuto2.Count) + " " + removed.Count);
+            Console.WriteLine("storttime " + totalStortTime);
             return minScore;
 
+        }
+
+        //bereken index van de order die het verst van de rest vandaan ligt
+        static int MostExpensive(List<Order> input)
+        {
+            int index = 0;
+            int time, maxTime = 0;
+
+            for(int i = 0; i < input.Count; i++)
+            {
+                time = 0;
+                if (i > 0)
+                    time += afstanden[input[i - 1].matrixID, input[i].matrixID].Item2;
+                if (i < input.Count-1)
+                    time += afstanden[input[i + 1].matrixID, input[i].matrixID].Item2;
+                if (time >= maxTime)
+                {
+                    maxTime = time;
+                    index = i;
+                }                       
+            }
+            return index;
         }
 
         //genereer nbs voor de 2 input lijsten door:
@@ -198,7 +222,9 @@ namespace GO
             List<Order> nb1 = CloneList(input1); List<Order> nb2 = CloneList(input2);
             Random rnd = new Random();
             int index;
-            switch (rnd.Next(0, 9))
+
+            //random index            
+            switch (rnd.Next(0, 7))
             {
                 //swap orders binnen lijst
                 case 0:
@@ -228,7 +254,8 @@ namespace GO
                         nb1.Add(nb2[index].Clone());
                         nb2.RemoveAt(index);
                     }
-                    break;     
+                    break;    
+                /*
                 //verwijder uit lijst 1 wordt bijgehouden met list<> removed
                 case 5:
                     if(nb1.Count > 1)
@@ -248,8 +275,8 @@ namespace GO
                     }
                     break;
                 //bugged
-                //makes orders disappear
-                /*
+                //makes orders disappear   
+                
                 case 7:
                     if (removed.Count > 0)
                     { 
@@ -265,10 +292,10 @@ namespace GO
                         nb2.Add(removed[index].Clone());
                         removed.RemoveAt(index);
                     }
-                    break;*/
-                       
-            }
-            
+                    break;
+                  */                       
+            }           
+
             return new Tuple<List<Order>, List<Order>>(nb1, nb2);
         }
         
@@ -303,10 +330,38 @@ namespace GO
             return new Tuple<List<Order>, List<Order>>(output1, output2);
         }
 
-        static float Eval(List<Order> input)
+        static float Eval(List<Order> input1, List<Order> input2)
+        {
+            totalStortTime = 0;
+            float score = 0;
+            //track how many times orders with freq > 1 are visited and what the previous day was
+            Dictionary<int, Tuple<int,int>> timesVisited = new Dictionary<int, Tuple<int, int>>();
+
+            score += CalcCost(input1, timesVisited);
+            score += CalcCost(input2, timesVisited);
+
+            //strafpunten voor orders die niet vaak genoeg zijn opgehaald
+            foreach (KeyValuePair<int, Tuple<int, float>> keyval in orderFreqs)
+            {
+                if (keyval.Value.Item1 != timesVisited[keyval.Key].Item1)
+                    score += keyval.Value.Item2 * 3f;
+            }
+            //strafpunten voor orders die overgeslagen zijn 
+            //maar niet al hierboven behandeld zijn
+            foreach (Order o in removed)
+            {
+                if(!orderFreqs.ContainsKey(o.id))
+                {
+                    score += o.ledigingsDuur * 3f;
+                }
+            }
+            return score;
+        }
+
+        static float CalcCost(List<Order> input, Dictionary<int, Tuple<int,int>> timesVisited)
         {
             int day = 1;
-            float time = 0, score = 0, currentLoad = 0;
+            float cost = 0, time = 0, currentLoad = 0;
             for (int i = 0; i < input.Count - 1; i++)
             {
                 float totalVolume = input[i].volume * input[i].aantContainers * 0.2f;
@@ -319,20 +374,24 @@ namespace GO
                 //als er meerdere keren opgehaald moet worden
                 if (orderFreqs.ContainsKey(input[i].id))
                 {
-                    Tuple<int, int, int, float> freqDayTimes = orderFreqs[input[i].id];
-                    //als er al een keer opgehaald is moet er gekeken worden of dit de goede dag is om weer op te halen volgens het bijbehorende ophaalpatroon
-                    if(freqDayTimes.Item2 != 0 && day - freqDayTimes.Item2 == 5 - freqDayTimes.Item1 && freqDayTimes.Item1 != freqDayTimes.Item3 || freqDayTimes.Item1 == 5)
-                    {
-                        time += input[i].ledigingsDuur;
-                        currentLoad += totalVolume;
-                        orderFreqs[input[i].id] = new Tuple<int, int, int, float>(freqDayTimes.Item1, day, freqDayTimes.Item3 + 1, freqDayTimes.Item4);
-                    }
+                    Tuple<int, float> freq = orderFreqs[input[i].id];
+                    bool visitedOnce = timesVisited.ContainsKey(input[i].id);
+                    Tuple<int, int> times = new Tuple<int, int>(0,0);
+                    if (visitedOnce)
+                        times = timesVisited[input[i].id];                    
                     //als er nog nooit is opgehaald
-                    else if(freqDayTimes.Item2 == 0)
+                    if (!visitedOnce)
                     {
                         time += input[i].ledigingsDuur;
                         currentLoad += totalVolume;
-                        orderFreqs[input[i].id] = new Tuple<int, int, int, float>(freqDayTimes.Item1, day, freqDayTimes.Item3 + 1, freqDayTimes.Item4);
+                        timesVisited.Add(input[i].id, new Tuple<int, int>(1, day));
+                    }
+                    //als er al een keer opgehaald is moet er gekeken worden of dit de goede dag is om weer op te halen volgens het bijbehorende ophaalpatroon
+                    else if (times.Item1 != 0 && day - times.Item2 == 5 - freq.Item1 && freq.Item1 != times.Item2 || freq.Item1 == 5 && day != times.Item2)
+                    {
+                        time += input[i].ledigingsDuur;
+                        currentLoad += totalVolume;
+                        timesVisited[input[i].id] = new Tuple<int, int>(times.Item2 + 1, day);
                     }
                 }
                 else
@@ -351,53 +410,42 @@ namespace GO
                 {
                     //terug naar stort aan het eind van de dag
                     time += toStortTime + 30;
-                    score += time;
+                    cost += time;
                     currentLoad = 0;
                     time = 0;
                     if (day == 5)
                         day = 1;
                     else
                         day++;
+
+                    totalStortTime += toStortTime + 30;
                 }
-                else if (currentLoad + input[i+1].volume * 0.2f > capacity)
+                else if (currentLoad + input[i + 1].volume * 0.2f > capacity)
                 {
                     //naar stort en storten
                     time += toStortTime + 30;
                     currentLoad = 0;
                     //naar volgende bestemming
                     time += afstanden[287, nextID].Item2;
+
+                    totalStortTime += toStortTime + 30 + afstanden[287, nextID].Item2;
                 }
                 //storten als het onderweg kan 
-                else if(nextDestTime >= toStortTime + afstanden[287, nextID].Item2)
+                else if (nextDestTime >= toStortTime + afstanden[287, nextID].Item2)
                 {
                     //naar stort en storten
                     time += toStortTime + 30;
                     currentLoad = 0;
                     //naar volgende bestemming
                     time += afstanden[287, nextID].Item2;
+
+                    totalStortTime += toStortTime + 30 + afstanden[287, nextID].Item2;
                 }
                 else
-                    time += nextDestTime;                
+                    time += nextDestTime;
             }
-            score += afstanden[input[input.Count - 1].matrixID, 287].Item2;
-
-            //strafpunten voor orders die niet vaak genoeg zijn opgehaald
-            foreach(Tuple<int, int, int, float> val in orderFreqs.Values)
-            {
-                if (val.Item1 != val.Item3)
-                    score += val.Item4 * 3f;
-            }
-            //strafpunten voor orders die overgeslagen zijn 
-            //maar niet al hierboven behandeld zijn
-            foreach (Order o in removed)
-            {
-                if(!orderFreqs.ContainsKey(o.id))
-                {
-                    score += o.ledigingsDuur * 3f;
-                }
-            }
-
-            return score;
+            cost += afstanden[input[input.Count - 1].matrixID, 287].Item2;
+            return cost;
         }
     }
 }
