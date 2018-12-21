@@ -52,6 +52,7 @@ namespace GO
             }
 
             Console.WriteLine(StartSmart());
+            Console.ReadLine();
         }
 
         //start zonder "slim" een basisoplossing te genereren
@@ -301,12 +302,15 @@ namespace GO
         
         static List<Order> CloneList(List<Order> input)
         {
+            return input;
+            /*
             List<Order> newList = new List<Order>();
             foreach (Order o in input)
             {
                 newList.Add(o.Clone());
             }
             return newList;
+            */
         }
         
         static List<Order> Swap(List<Order> input, int x, int y)
