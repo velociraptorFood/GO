@@ -182,7 +182,7 @@ namespace GO
                 }
                 //old: Math.Exp(newScore - minScore) / t > r.Next(0, 2) and limit - k > r.Next(0, 2 * limit)
                 
-                else if (p > r.Next(0, 2))
+                else if (p > r.Next(0, 1))
                 {
                     auto1 = CloneList(newAuto1);
                     auto2 = CloneList(newAuto2);
@@ -227,7 +227,7 @@ namespace GO
             int index;
 
             //random index            
-            switch (rnd.Next(0, 10))
+            switch (rnd.Next(0, 12))
             {
                 //swap orders binnen lijst
                 case 0:
@@ -269,27 +269,33 @@ namespace GO
                     break;
                 //swap 3 orders tegelijk
                 case 7:
-                    int swap3nb11 = rnd.Next(0, (nb1.Count - 3));
-                    int swap3nb12 = rnd.Next(0, (nb1.Count - 3));
+                    int swap3nb11 = rnd.Next(0, (nb1.Count - 4));
+                    int swap3nb12 = rnd.Next(0, (nb1.Count - 4));
                     Swap3(nb1, swap3nb11, swap3nb12);
                     break;
                 case 8:
-                    int swap3nb21 = rnd.Next(0, (nb1.Count - 3));
-                    int swap3nb22 = rnd.Next(0, (nb1.Count - 3));
-                    Swap3(nb1, swap3nb21, swap3nb22);
+                    int swap3nb21 = rnd.Next(0, (nb2.Count - 4));
+                    int swap3nb22 = rnd.Next(0, (nb2.Count - 4));
+                    Swap3(nb2, swap3nb21, swap3nb22);
                     break;
                 //swap een range van 0 tot 5 orders
                 case 9:
                     int amountnb1 = rnd.Next(0, 5);
-                    int swaprangenb11 = rnd.Next(0, (nb1.Count - amountnb1));
-                    int swaprangenb12 = rnd.Next(0, (nb1.Count - amountnb1));
+                    int swaprangenb11 = rnd.Next(0, (nb1.Count - (amountnb1 + 1)));
+                    int swaprangenb12 = rnd.Next(0, (nb1.Count - (amountnb1 + 1)));
                     SwapAmount(nb1, swaprangenb11, swaprangenb12, amountnb1);
                     break;
                 case 10:
                     int amountnb2 = rnd.Next(0, 5);
-                    int swaprangenb21 = rnd.Next(0, (nb1.Count - amountnb2));
-                    int swaprangenb22 = rnd.Next(0, (nb1.Count - amountnb2));
+                    int swaprangenb21 = rnd.Next(0, (nb2.Count - (amountnb2 + 1)));
+                    int swaprangenb22 = rnd.Next(0, (nb2.Count - (amountnb2 + 1)));
                     SwapAmount(nb2, swaprangenb21, swaprangenb22, amountnb2);
+                    break;
+                case 11:
+                    Swap(nb1, MostExpensive(nb1), rnd.Next(0, nb1.Count));
+                    break;
+                case 12:
+                    Swap(nb2, MostExpensive(nb2), rnd.Next(0, nb2.Count));
                     break;
                     /*
                     //verwijder uit lijst 1 wordt bijgehouden met list<> removed
