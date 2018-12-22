@@ -51,6 +51,12 @@ namespace GO
                 afstanden[int.Parse(split[0]), int.Parse(split[1])] = new Tuple<int, int>(int.Parse(split[2]), int.Parse(split[3]));
             }
 
+            Random rnd = new Random();
+
+
+            Console.WriteLine(rnd.Next(0,12));
+            Console.WriteLine(rnd.Next(0,12));
+            Console.WriteLine(rnd.Next(0,12));
             Console.WriteLine(StartSmart());
             Console.ReadLine();
         }
@@ -224,7 +230,7 @@ namespace GO
             int index;
 
             //random index            
-            switch (rnd.Next(0, 7))
+            switch (rnd.Next(0, 10))
             {
                 //swap orders binnen lijst
                 case 0:
@@ -264,9 +270,20 @@ namespace GO
                     int swapplek2 = rnd.Next(0, (nb2.Count - 1));
                     Swap(nb2, swapplek2, swapplek2 + 1);
                     break;
+                case 7:
+                    int swap3nb11 = rnd.Next(0, (nb1.Count - 3));
+                    int swap3nb12 = rnd.Next(0, (nb1.Count - 3));
+                    Swap3(nb1, swap3nb11, swap3nb12);
+                    break;
+                case 8:
+                    int swap3nb21 = rnd.Next(0, (nb1.Count - 3));
+                    int swap3nb22 = rnd.Next(0, (nb1.Count - 3));
+                    Swap3(nb1, swap3nb21, swap3nb22);
+                    break;
+                //case 9: 
                     /*
                     //verwijder uit lijst 1 wordt bijgehouden met list<> removed
-                    case 5:
+                    case 7:
                         if(nb1.Count > 1)
                         {
                             index = rnd.Next(0,nb1.Count);
@@ -275,7 +292,7 @@ namespace GO
                         }
                         break;
                     //omgekeerd
-                    case 6:
+                    case 8:
                         if (nb2.Count > 1)
                         {
                             index = rnd.Next(0, nb2.Count);
@@ -286,7 +303,7 @@ namespace GO
                     //bugged
                     //makes orders disappear   
 
-                    case 7:
+                    case 9:
                         if (removed.Count > 0)
                         { 
                             index = rnd.Next(0, removed.Count);
@@ -294,7 +311,7 @@ namespace GO
                             removed.RemoveAt(index);
                         }
                         break;
-                    case 8:
+                    case 10:
                         if (removed.Count > 0)
                         { 
                             index = rnd.Next(0, removed.Count);
@@ -329,6 +346,44 @@ namespace GO
                 Order temp = output[x];
                 output[x] = output[y];
                 output[y] = temp;
+            }
+            return output;
+        }
+
+        static List<Order> Swap3(List<Order> input, int x, int y)
+        {
+            List<Order> output = CloneList(input);
+
+            if ((x + 3) < y || x > (y + 3))
+            {
+                Order temp = output[x];
+                Order temp2 = output[x+1];
+                Order temp3 = output[x+2];
+                output[x] = output[y];
+                output[x+1] = output[y+1];
+                output[x+2] = output[y+2];
+                output[y] = temp;
+                output[y+1] = temp2;
+                output[y+2] = temp3;
+            }
+            return output;
+        }
+
+        static List<Order> Swap1tot3(List<Order> input, int x, int y, int amount)
+        {
+            List<Order> output = CloneList(input);
+            Order[] templist = new Order[amount];
+            if ((x + amount) < y || x > (y + amount))
+            {
+                for(int i = 0; i < amount; i++)
+                {
+                    templist[i] = output[x + i];
+                }
+                for(int i = 0; i < amount; i++)
+                {
+                    output[x + i] = output[y + i];
+                    output[y + i] = templist[i];
+                }
             }
             return output;
         }
