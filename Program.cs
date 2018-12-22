@@ -26,6 +26,7 @@ namespace GO
         {
             orderList = new Order[1177];
 
+            //orders inlezen
             for (int i = 0; i < 1177; i++)
             {
                 string[] split = orders[i].Split(';');
@@ -51,7 +52,7 @@ namespace GO
                 afstanden[int.Parse(split[0]), int.Parse(split[1])] = new Tuple<int, int>(int.Parse(split[2]), int.Parse(split[3]));
             }
 
-            Console.WriteLine(StartSmart());
+            Console.WriteLine("best result: " + StartSmart());
             Console.ReadLine();
         }
 
@@ -123,7 +124,7 @@ namespace GO
                         auto2.Add(auto2[i].Clone());
                 }
             }
-            return Iterate(auto1, auto2, 100000);
+            return Iterate(auto1, auto2, 10000);
         }
 
         //zoek steeds de dichtstbijzijnde locatie en voeg die toe als volgende in de list
@@ -163,6 +164,7 @@ namespace GO
             Random r = new Random();
             minScore = Eval(auto1, auto2);
             List<Order> bestAuto1 = new List<Order>(), bestAuto2 = new List<Order>();
+            //loop voor de iteraties
             while (k < limit)
             {
                 Tuple<List<Order>, List<Order>> newAutos = GenerateNeighbours(auto1, auto2);
@@ -177,22 +179,20 @@ namespace GO
                     {
                         minScore = newScore;
                         bestAuto1 = CloneList(auto1); bestAuto2 = CloneList(auto2);
-                        Console.WriteLine(newScore);
                     }
                 }
-                //old: Math.Exp(newScore - minScore) / t > r.Next(0, 2) and limit - k > r.Next(0, 2 * limit)
-                
+                // met p wordt de kans op acceptatie van een slechter resultaat bepaald
                 else if (p > r.Next(0, 1))
                 {
                     auto1 = CloneList(newAuto1);
                     auto2 = CloneList(newAuto2);
                 }
                 k++;
+                //t neemt iedere iteratie af
                 t = (float)Math.Pow(0.99, k);
-                Console.WriteLine(newScore);
             }
-            Console.WriteLine((bestAuto1.Count + bestAuto2.Count) + " " + removed.Count);
-            Console.WriteLine("storttime " + totalStortTime);
+            Console.WriteLine("orders in cars: " + (bestAuto1.Count + bestAuto2.Count) + " removed orders: " + removed.Count);
+            Console.WriteLine("storttime: " + totalStortTime);
             return minScore;
 
         }
@@ -291,15 +291,18 @@ namespace GO
                     int swaprangenb22 = rnd.Next(0, (nb2.Count - (amountnb2 + 1)));
                     SwapAmount(nb2, swaprangenb21, swaprangenb22, amountnb2);
                     break;
+                // swap het duurste order met een willekeurig order
                 case 11:
                     Swap(nb1, MostExpensive(nb1), rnd.Next(0, nb1.Count));
                     break;
                 case 12:
                     Swap(nb2, MostExpensive(nb2), rnd.Next(0, nb2.Count));
                     break;
+                // de remove cases werken nog niet goed
+
                     /*
                     //verwijder uit lijst 1 wordt bijgehouden met list<> removed
-                    case 7:
+                    case 13:
                         if(nb1.Count > 1)
                         {
                             index = rnd.Next(0,nb1.Count);
@@ -308,7 +311,7 @@ namespace GO
                         }
                         break;
                     //omgekeerd
-                    case 8:
+                    case 14:
                         if (nb2.Count > 1)
                         {
                             index = rnd.Next(0, nb2.Count);
@@ -319,7 +322,7 @@ namespace GO
                     //bugged
                     //makes orders disappear   
 
-                    case 9:
+                    case 15:
                         if (removed.Count > 0)
                         { 
                             index = rnd.Next(0, removed.Count);
@@ -327,7 +330,7 @@ namespace GO
                             removed.RemoveAt(index);
                         }
                         break;
-                    case 10:
+                    case 16:
                         if (removed.Count > 0)
                         { 
                             index = rnd.Next(0, removed.Count);
@@ -341,6 +344,7 @@ namespace GO
             return new Tuple<List<Order>, List<Order>>(nb1, nb2);
         }
         
+        //maak een copie van een list
         static List<Order> CloneList(List<Order> input)
         {
             
@@ -354,6 +358,7 @@ namespace GO
             
         }
         
+        //swap 2 elementen in een list op de index x en y
         static List<Order> Swap(List<Order> input, int x, int y)
         {
             List<Order> output = CloneList(input);
@@ -366,6 +371,7 @@ namespace GO
             return output;
         }
 
+        //swap 3 elementen tegelijk vanaf index x en y
         static List<Order> Swap3(List<Order> input, int x, int y)
         {
             List<Order> output = CloneList(input);
@@ -385,6 +391,7 @@ namespace GO
             return output;
         }
 
+        //swap een willekeurig aantal elementen tegelijk vanaf index x en y
         static List<Order> SwapAmount(List<Order> input, int x, int y, int amount)
         {
             List<Order> output = CloneList(input);
@@ -404,6 +411,7 @@ namespace GO
             return output;
         }
 
+        //swap orders tussen de 2 verschillende lijsten (auto1 en auto2)
         static Tuple<List<Order>, List<Order>> SwapBetween(List<Order> input1, List<Order> input2, int x, int y)
         {
             List<Order> output1 = CloneList(input1), output2 = CloneList(input2);
@@ -413,6 +421,7 @@ namespace GO
             return new Tuple<List<Order>, List<Order>>(output1, output2);
         }
 
+        //berekend de score van een state
         static float Eval(List<Order> input1, List<Order> input2)
         {
             totalStortTime = 0;
@@ -441,6 +450,7 @@ namespace GO
             return score;
         }
 
+        //brekend de score van een enkele auto
         static float CalcCost(List<Order> input, Dictionary<int, Tuple<int,int>> timesVisited)
         {
             int day = 1;
