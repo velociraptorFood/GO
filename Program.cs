@@ -123,7 +123,7 @@ namespace GO
                         auto2.Add(auto2[i].Clone());
                 }
             }
-            return Iterate(auto1, auto2, 10000);
+            return Iterate(auto1, auto2, 100000);
         }
 
         //zoek steeds de dichtstbijzijnde locatie en voeg die toe als volgende in de list
@@ -158,7 +158,7 @@ namespace GO
         //gebruik simulated annealing om een oplossing te vinden
         static float Iterate(List<Order> auto1, List<Order> auto2, int limit)
         {
-            float minScore, t0 = 2, t = 0;
+            float minScore, t = 0;
             int k = 0;
             Random r = new Random();
             minScore = Eval(auto1, auto2);
@@ -168,6 +168,7 @@ namespace GO
                 Tuple<List<Order>, List<Order>> newAutos = GenerateNeighbours(auto1, auto2);
                 List<Order> newAuto1 = newAutos.Item1, newAuto2 = newAutos.Item2;
                 float newScore = Eval(newAuto1, newAuto2);
+                double p = Math.Exp(newScore - minScore) / t;
                 if (newScore <= Eval(auto1, auto2))
                 {
                     auto1 = CloneList(newAuto1);
@@ -179,14 +180,15 @@ namespace GO
                         Console.WriteLine(newScore);
                     }
                 }
-                //old: Math.Exp(newScore - minScore) / t > r.Next(0, 2)
-                else if (limit - k > r.Next(0, 2 * limit))
+                //old: Math.Exp(newScore - minScore) / t > r.Next(0, 2) and limit - k > r.Next(0, 2 * limit)
+                
+                else if (p > r.Next(0, 2))
                 {
                     auto1 = CloneList(newAuto1);
                     auto2 = CloneList(newAuto2);
                 }
                 k++;
-                //t = t0 * (float)Math.Pow(0.95, k);
+                t = (float)Math.Pow(0.99, k);
                 Console.WriteLine(newScore);
             }
             Console.WriteLine((bestAuto1.Count + bestAuto2.Count) + " " + removed.Count);
