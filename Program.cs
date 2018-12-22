@@ -51,12 +51,6 @@ namespace GO
                 afstanden[int.Parse(split[0]), int.Parse(split[1])] = new Tuple<int, int>(int.Parse(split[2]), int.Parse(split[3]));
             }
 
-            Random rnd = new Random();
-
-
-            Console.WriteLine(rnd.Next(0,12));
-            Console.WriteLine(rnd.Next(0,12));
-            Console.WriteLine(rnd.Next(0,12));
             Console.WriteLine(StartSmart());
             Console.ReadLine();
         }
@@ -185,13 +179,14 @@ namespace GO
                         Console.WriteLine(newScore);
                     }
                 }
-                else if (Math.Exp(newScore - minScore) / t > r.Next(0, 2))
+                //old: Math.Exp(newScore - minScore) / t > r.Next(0, 2)
+                else if (limit - k > r.Next(0, 2 * limit))
                 {
                     auto1 = CloneList(newAuto1);
                     auto2 = CloneList(newAuto2);
                 }
                 k++;
-                t = t0 * (float)Math.Pow(0.95, k);
+                //t = t0 * (float)Math.Pow(0.95, k);
                 Console.WriteLine(newScore);
             }
             Console.WriteLine((bestAuto1.Count + bestAuto2.Count) + " " + removed.Count);
@@ -270,6 +265,7 @@ namespace GO
                     int swapplek2 = rnd.Next(0, (nb2.Count - 1));
                     Swap(nb2, swapplek2, swapplek2 + 1);
                     break;
+                //swap 3 orders tegelijk
                 case 7:
                     int swap3nb11 = rnd.Next(0, (nb1.Count - 3));
                     int swap3nb12 = rnd.Next(0, (nb1.Count - 3));
@@ -280,7 +276,19 @@ namespace GO
                     int swap3nb22 = rnd.Next(0, (nb1.Count - 3));
                     Swap3(nb1, swap3nb21, swap3nb22);
                     break;
-                //case 9: 
+                //swap een range van 0 tot 5 orders
+                case 9:
+                    int amountnb1 = rnd.Next(0, 5);
+                    int swaprangenb11 = rnd.Next(0, (nb1.Count - amountnb1));
+                    int swaprangenb12 = rnd.Next(0, (nb1.Count - amountnb1));
+                    SwapAmount(nb1, swaprangenb11, swaprangenb12, amountnb1);
+                    break;
+                case 10:
+                    int amountnb2 = rnd.Next(0, 5);
+                    int swaprangenb21 = rnd.Next(0, (nb1.Count - amountnb2));
+                    int swaprangenb22 = rnd.Next(0, (nb1.Count - amountnb2));
+                    SwapAmount(nb2, swaprangenb21, swaprangenb22, amountnb2);
+                    break;
                     /*
                     //verwijder uit lijst 1 wordt bijgehouden met list<> removed
                     case 7:
@@ -369,7 +377,7 @@ namespace GO
             return output;
         }
 
-        static List<Order> Swap1tot3(List<Order> input, int x, int y, int amount)
+        static List<Order> SwapAmount(List<Order> input, int x, int y, int amount)
         {
             List<Order> output = CloneList(input);
             Order[] templist = new Order[amount];
