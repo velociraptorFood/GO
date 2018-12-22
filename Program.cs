@@ -82,7 +82,7 @@ namespace GO
                 else
                     auto2.Add(orderList[i].Clone());
             }
-            return Iterate(auto1, auto2, 1000000);
+            return Iterate(auto1, auto2, 100000);
         }
 
         //gebruik ShortestTimeSort() om de 2 opgedeelde delen greedy te sorten
@@ -123,8 +123,7 @@ namespace GO
                         auto2.Add(auto2[i].Clone());
                 }
             }
-
-            return Iterate(auto1, auto2, 1000);
+            return Iterate(auto1, auto2, 10000);
         }
 
         //zoek steeds de dichtstbijzijnde locatie en voeg die toe als volgende in de list
@@ -184,10 +183,10 @@ namespace GO
                 {
                     auto1 = CloneList(newAuto1);
                     auto2 = CloneList(newAuto2);
-                    //Console.WriteLine(newScore);
                 }
                 k++;
                 t = t0 * (float)Math.Pow(0.95, k);
+                Console.WriteLine(newScore);
             }
             Console.WriteLine((bestAuto1.Count + bestAuto2.Count) + " " + removed.Count);
             Console.WriteLine("storttime " + totalStortTime);
@@ -255,46 +254,55 @@ namespace GO
                         nb1.Add(nb2[index].Clone());
                         nb2.RemoveAt(index);
                     }
-                    break;    
-                /*
-                //verwijder uit lijst 1 wordt bijgehouden met list<> removed
+                    break;
+                //swap naastgelegen buren
                 case 5:
-                    if(nb1.Count > 1)
-                    {
-                        index = rnd.Next(0,nb1.Count);
-                        removed.Add(nb1[index].Clone());
-                        nb1.RemoveAt(index);
-                    }
+                    int swapplek = rnd.Next(0, (nb1.Count - 1));
+                    Swap(nb1, swapplek, swapplek + 1);
                     break;
-                //omgekeerd
                 case 6:
-                    if (nb2.Count > 1)
-                    {
-                        index = rnd.Next(0, nb2.Count);
-                        removed.Add(nb2[index].Clone());
-                        nb2.RemoveAt(index);
-                    }
+                    int swapplek2 = rnd.Next(0, (nb2.Count - 1));
+                    Swap(nb2, swapplek2, swapplek2 + 1);
                     break;
-                //bugged
-                //makes orders disappear   
-                
-                case 7:
-                    if (removed.Count > 0)
-                    { 
-                        index = rnd.Next(0, removed.Count);
-                        nb1.Add(removed[index].Clone());
-                        removed.RemoveAt(index);
-                    }
-                    break;
-                case 8:
-                    if (removed.Count > 0)
-                    { 
-                        index = rnd.Next(0, removed.Count);
-                        nb2.Add(removed[index].Clone());
-                        removed.RemoveAt(index);
-                    }
-                    break;
-                  */                       
+                    /*
+                    //verwijder uit lijst 1 wordt bijgehouden met list<> removed
+                    case 5:
+                        if(nb1.Count > 1)
+                        {
+                            index = rnd.Next(0,nb1.Count);
+                            removed.Add(nb1[index].Clone());
+                            nb1.RemoveAt(index);
+                        }
+                        break;
+                    //omgekeerd
+                    case 6:
+                        if (nb2.Count > 1)
+                        {
+                            index = rnd.Next(0, nb2.Count);
+                            removed.Add(nb2[index].Clone());
+                            nb2.RemoveAt(index);
+                        }
+                        break;
+                    //bugged
+                    //makes orders disappear   
+
+                    case 7:
+                        if (removed.Count > 0)
+                        { 
+                            index = rnd.Next(0, removed.Count);
+                            nb1.Add(removed[index].Clone());
+                            removed.RemoveAt(index);
+                        }
+                        break;
+                    case 8:
+                        if (removed.Count > 0)
+                        { 
+                            index = rnd.Next(0, removed.Count);
+                            nb2.Add(removed[index].Clone());
+                            removed.RemoveAt(index);
+                        }
+                        break;
+                      */
             }           
 
             return new Tuple<List<Order>, List<Order>>(nb1, nb2);
@@ -302,15 +310,15 @@ namespace GO
         
         static List<Order> CloneList(List<Order> input)
         {
-            return input;
-            /*
+            
+            
             List<Order> newList = new List<Order>();
             foreach (Order o in input)
             {
                 newList.Add(o.Clone());
             }
             return newList;
-            */
+            
         }
         
         static List<Order> Swap(List<Order> input, int x, int y)

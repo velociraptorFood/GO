@@ -25,5 +25,11 @@ namespace GO
             o.ledigingsDuur = ledigingsDuur;
             return o;
         }
+
+        public string Printorder()
+        {
+            string output = "plaats:" + plaats + " id:" + id + " freq:" + freq + " aantContainers:" + aantContainers + " volume:" + volume + " matrixID:" + matrixID + " ledigingsduur:" + ledigingsDuur + " x:" + x + " y:" + y;
+            return output;
+        }
     }
 }
