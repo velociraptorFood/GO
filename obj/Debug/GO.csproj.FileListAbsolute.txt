@@ -12,3 +12,10 @@ C:\Users\rickb\OneDrive\Documents\GitHub\GO\obj\Debug\GO.csprojResolveAssemblyRe
 C:\Users\rickb\OneDrive\Documents\GitHub\GO\obj\Debug\GO.csproj.CoreCompileInputs.cache
 C:\Users\rickb\OneDrive\Documents\GitHub\GO\obj\Debug\GO.exe
 C:\Users\rickb\OneDrive\Documents\GitHub\GO\obj\Debug\GO.pdb
+C:\Users\Twinstings\Documents\GitHub\GO\bin\Debug\GO.exe.config
+C:\Users\Twinstings\Documents\GitHub\GO\bin\Debug\GO.exe
+C:\Users\Twinstings\Documents\GitHub\GO\bin\Debug\GO.pdb
+C:\Users\Twinstings\Documents\GitHub\GO\obj\Debug\GO.csprojAssemblyReference.cache
+C:\Users\Twinstings\Documents\GitHub\GO\obj\Debug\GO.csproj.CoreCompileInputs.cache
+C:\Users\Twinstings\Documents\GitHub\GO\obj\Debug\GO.exe
+C:\Users\Twinstings\Documents\GitHub\GO\obj\Debug\GO.pdb

@@ -54,78 +54,108 @@ namespace GO
 
             Console.WriteLine("best result: " + StartSmart());
             Console.ReadLine();
-        }
-
-        //start zonder "slim" een basisoplossing te genereren
-        static float Start()
-        {
-            List<Order> auto1 = new List<Order>(), auto2 = new List<Order>();
-
-            for (int i = 0; i < orderList.Length / 2; i++)
-            {
-                if (orderList[i].freq > 1)
-                {
-                    orderFreqs.Add(orderList[i].id, new Tuple<int, float>(orderList[i].freq, orderList[i].ledigingsDuur * orderList[i].aantContainers));
-                    for (int j = 0; j < orderList[i].freq; j++)
-                        auto1.Add(orderList[i].Clone());
-                }
-                else
-                    auto1.Add(orderList[i].Clone());
-            }
-            for (int i = orderList.Length / 2; i < orderList.Length; i++)
-            {
-                if (orderList[i].freq > 1)
-                {
-                    orderFreqs.Add(orderList[i].id, new Tuple<int, float>(orderList[i].freq, orderList[i].ledigingsDuur * orderList[i].aantContainers));
-                    for (int j = 0; j < orderList[i].freq; j++)
-                        auto2.Add(orderList[i].Clone());
-                }
-                else
-                    auto2.Add(orderList[i].Clone());
-            }
-            return Iterate(auto1, auto2, 100000);
-        }
+        }        
 
         //gebruik ShortestTimeSort() om de 2 opgedeelde delen greedy te sorten
         //voegt ook voor orders met freq > 1 data toe aan een dict zodat er bijgehouden kan worden of deze orders goed behandeld worden
         static float StartSmart()
         {
-            List<Order> auto1 = new List<Order>(), auto2 = new List<Order>();
+            List<Order>[] auto1 = new List<Order>[5], auto2 = new List<Order>[5];
+            List<Order> auto1Ma = new List<Order>(), auto1Di = new List<Order>(), auto1Wo = new List<Order>(), auto1Do = new List<Order>(), auto1Vr = new List<Order>(),
+                auto2Ma = new List<Order>(), auto2Di = new List<Order>(), auto2Wo = new List<Order>(), auto2Do = new List<Order>(), auto2Vr = new List<Order>();
+            auto1[0] = auto1Ma; auto1[1] = auto1Di; auto1[2] = auto1Wo; auto1[3] = auto1Do; auto1[4] = auto1Vr;
+            auto2[0] = auto2Ma; auto2[1] = auto2Di; auto2[2] = auto2Wo; auto2[3] = auto2Do; auto2[4] = auto2Vr;
 
-            for (int i = 0; i < orderList.Length / 2; i++)
+            int step = orderList.Length / 10;
+            for (int i = 0; i < orderList.Length; i++)
             {
-                auto1.Add(orderList[i].Clone());
-            }
-            for (int i = orderList.Length / 2; i < orderList.Length; i++)
-            {
-                auto2.Add(orderList[i].Clone());
-            }
-
-            auto1 = ShortestTimeSort(CloneList(auto1));
-            int max = auto1.Count;
-            for (int i = 0; i < max; i++)
-            {
-                if (auto1[i].freq > 1)
+                int freq = orderList[i].freq;
+                if (freq > 1 && i < orderList.Length / 2)
                 {
-                    orderFreqs.Add(auto1[i].id, new Tuple<int, float>(auto1[i].freq, auto1[i].ledigingsDuur * auto1[i].aantContainers));
-                    for (int j = 1; j < auto1[i].freq; j++)
-                        auto1.Add(auto1[i].Clone());
+                    orderFreqs.Add(orderList[i].id, new Tuple<int, float>(freq, orderList[i].ledigingsDuur * orderList[i].aantContainers));
+                    if (freq == 2)
+                    {
+                        auto1[0].Add(orderList[i].Clone());
+                        auto1[3].Add(orderList[i].Clone());
+                    }
+                    else if (freq == 3)
+                    {
+                        auto1[0].Add(orderList[i].Clone());
+                        auto1[2].Add(orderList[i].Clone());
+                        auto1[4].Add(orderList[i].Clone());
+                    }
+                    else if (freq == 4)
+                    {
+                        auto1[0].Add(orderList[i].Clone());
+                        auto1[1].Add(orderList[i].Clone());
+                        auto1[2].Add(orderList[i].Clone());
+                        auto1[3].Add(orderList[i].Clone());
+                    }
+                    else if (freq == 5)
+                    {
+                        auto1[0].Add(orderList[i].Clone());
+                        auto1[1].Add(orderList[i].Clone());
+                        auto1[2].Add(orderList[i].Clone());
+                        auto1[3].Add(orderList[i].Clone());
+                        auto1[4].Add(orderList[i].Clone());
+                    }
                 }
-            }
-
-            auto2 = ShortestTimeSort(CloneList(auto2));
-            max = auto2.Count;
-            for (int i = 0; i < max; i++)
-            {
-                if (auto2[i].freq > 1)
+                else if (freq > 1 && i < orderList.Length)
                 {
-                    orderFreqs.Add(auto2[i].id, new Tuple<int, float>(auto2[i].freq, auto2[i].ledigingsDuur * auto2[i].aantContainers));
-                    for (int j = 1; j < auto2[i].freq; j++)
-                        auto2.Add(auto2[i].Clone());
+                    orderFreqs.Add(orderList[i].id, new Tuple<int, float>(freq, orderList[i].ledigingsDuur * orderList[i].aantContainers));
+                    if (freq == 2)
+                    {
+                        auto2[0].Add(orderList[i].Clone());
+                        auto2[3].Add(orderList[i].Clone());
+                    }
+                    else if (freq == 3)
+                    {
+                        auto2[0].Add(orderList[i].Clone());
+                        auto2[2].Add(orderList[i].Clone());
+                        auto2[4].Add(orderList[i].Clone());
+                    }
+                    else if (freq == 4)
+                    {
+                        auto2[0].Add(orderList[i].Clone());
+                        auto2[1].Add(orderList[i].Clone());
+                        auto2[2].Add(orderList[i].Clone());
+                        auto2[3].Add(orderList[i].Clone());
+                    }
+                    else if (freq == 5)
+                    {
+                        auto2[0].Add(orderList[i].Clone());
+                        auto2[1].Add(orderList[i].Clone());
+                        auto2[2].Add(orderList[i].Clone());
+                        auto2[3].Add(orderList[i].Clone());
+                        auto2[4].Add(orderList[i].Clone());
+                    }
                 }
-            }
+
+                else if (i < step)
+                    auto1[0].Add(orderList[i].Clone());
+                else if (i < 2*step)
+                    auto1[1].Add(orderList[i].Clone());
+                else if (i < 3*step)
+                    auto1[2].Add(orderList[i].Clone());
+                else if (i < 4*step)
+                    auto1[3].Add(orderList[i].Clone());
+                else if (i < 5*step)
+                    auto1[4].Add(orderList[i].Clone());
+                else if (i < 6*step)
+                    auto2[0].Add(orderList[i].Clone());
+                else if (i < 7*step)
+                    auto2[1].Add(orderList[i].Clone());
+                else if (i < 8*step)
+                    auto2[2].Add(orderList[i].Clone());
+                else if (i < 9*step)
+                    auto2[3].Add(orderList[i].Clone());
+                else
+                    auto2[4].Add(orderList[i].Clone());
+            }           
             return Iterate(auto1, auto2, 10000);
         }
+
+
 
         //zoek steeds de dichtstbijzijnde locatie en voeg die toe als volgende in de list
         static List<Order> ShortestTimeSort(List<Order> input)
@@ -157,41 +187,41 @@ namespace GO
         }
 
         //gebruik simulated annealing om een oplossing te vinden
-        static float Iterate(List<Order> auto1, List<Order> auto2, int limit)
+        static float Iterate(List<Order>[] auto1, List<Order>[] auto2, int limit)
         {
             float minScore, t = 0;
             int k = 0;
             Random r = new Random();
             minScore = Eval(auto1, auto2);
-            List<Order> bestAuto1 = new List<Order>(), bestAuto2 = new List<Order>();
+            List<Order>[] bestAuto1 = new List<Order>[5], bestAuto2 = new List<Order>[5];
             //loop voor de iteraties
             while (k < limit)
             {
-                Tuple<List<Order>, List<Order>> newAutos = GenerateNeighbours(auto1, auto2);
-                List<Order> newAuto1 = newAutos.Item1, newAuto2 = newAutos.Item2;
+                Tuple<List<Order>[], List<Order>[]> newAutos = GenerateNeighbours(auto1, auto2);
+                List<Order>[] newAuto1 = newAutos.Item1, newAuto2 = newAutos.Item2;
                 float newScore = Eval(newAuto1, newAuto2);
                 double p = Math.Exp(newScore - minScore) / t;
                 if (newScore <= Eval(auto1, auto2))
                 {
-                    auto1 = CloneList(newAuto1);
-                    auto2 = CloneList(newAuto2);
+                    auto1 = newAuto1;
+                    auto2 = newAuto2;
                     if (newScore < minScore)
                     {
                         minScore = newScore;
-                        bestAuto1 = CloneList(auto1); bestAuto2 = CloneList(auto2);
+                        bestAuto1 = auto1; bestAuto2 = auto2;
                     }
                 }
                 // met p wordt de kans op acceptatie van een slechter resultaat bepaald
-                else if (p > r.Next(0, 1))
+                else if (p > r.NextDouble())
                 {
-                    auto1 = CloneList(newAuto1);
-                    auto2 = CloneList(newAuto2);
+                    auto1 = newAuto1;
+                    auto2 = newAuto2;
                 }
                 k++;
                 //t neemt iedere iteratie af
                 t = (float)Math.Pow(0.99, k);
             }
-            Console.WriteLine("orders in cars: " + (bestAuto1.Count + bestAuto2.Count) + " removed orders: " + removed.Count);
+            //Console.WriteLine("orders in cars: " + (bestAuto1.Count + bestAuto2.Count) + " removed orders: " + removed.Count);
             Console.WriteLine("storttime: " + totalStortTime);
             return minScore;
 
@@ -220,128 +250,20 @@ namespace GO
         }
 
         //genereer nbs voor de 2 input lijsten door:
-        static Tuple<List<Order>,List<Order>> GenerateNeighbours(List<Order> input1, List <Order> input2)
+        static Tuple<List<Order>[],List<Order>[]> GenerateNeighbours(List<Order>[] input1, List <Order>[] input2)
         {
-            List<Order> nb1 = CloneList(input1); List<Order> nb2 = CloneList(input2);
+            List<Order>[] nb1 = new List<Order>[5]; List<Order>[] nb2 = new List<Order>[5];
+            for(int i = 0; i < 5; i++)
+            {
+                nb1[i] = CloneList(input1[i]);
+                nb2[i] = CloneList(input2[i]);
+            }
             Random rnd = new Random();
             int index;
 
-            //random index            
-            switch (rnd.Next(0, 12))
-            {
-                //swap orders binnen lijst
-                case 0:
-                    Swap(nb1, rnd.Next(0, nb1.Count), rnd.Next(0, nb1.Count));
-                    break;
-                case 1:
-                    Swap(nb2, rnd.Next(0, nb2.Count), rnd.Next(0, nb2.Count));
-                    break;
-                //swap orders tussen de lijsten
-                case 2:
-                    SwapBetween(nb1, nb2, rnd.Next(0, nb1.Count), rnd.Next(0, nb2.Count));
-                    break;
-                //haal order uit lijst 1 en voeg toe aan lijst 2 
-                case 3:
-                    if (nb1.Count > 1)
-                    {
-                        index = rnd.Next(0, nb1.Count);
-                        nb2.Add(nb1[index].Clone());
-                        nb1.RemoveAt(index);
-                    }
-                    break;
-                //omgekeerd
-                case 4:
-                    if (nb2.Count > 1)
-                    {
-                        index = rnd.Next(0, nb2.Count);
-                        nb1.Add(nb2[index].Clone());
-                        nb2.RemoveAt(index);
-                    }
-                    break;
-                //swap naastgelegen buren
-                case 5:
-                    int swapplek = rnd.Next(0, (nb1.Count - 1));
-                    Swap(nb1, swapplek, swapplek + 1);
-                    break;
-                case 6:
-                    int swapplek2 = rnd.Next(0, (nb2.Count - 1));
-                    Swap(nb2, swapplek2, swapplek2 + 1);
-                    break;
-                //swap 3 orders tegelijk
-                case 7:
-                    int swap3nb11 = rnd.Next(0, (nb1.Count - 4));
-                    int swap3nb12 = rnd.Next(0, (nb1.Count - 4));
-                    Swap3(nb1, swap3nb11, swap3nb12);
-                    break;
-                case 8:
-                    int swap3nb21 = rnd.Next(0, (nb2.Count - 4));
-                    int swap3nb22 = rnd.Next(0, (nb2.Count - 4));
-                    Swap3(nb2, swap3nb21, swap3nb22);
-                    break;
-                //swap een range van 0 tot 5 orders
-                case 9:
-                    int amountnb1 = rnd.Next(0, 5);
-                    int swaprangenb11 = rnd.Next(0, (nb1.Count - (amountnb1 + 1)));
-                    int swaprangenb12 = rnd.Next(0, (nb1.Count - (amountnb1 + 1)));
-                    SwapAmount(nb1, swaprangenb11, swaprangenb12, amountnb1);
-                    break;
-                case 10:
-                    int amountnb2 = rnd.Next(0, 5);
-                    int swaprangenb21 = rnd.Next(0, (nb2.Count - (amountnb2 + 1)));
-                    int swaprangenb22 = rnd.Next(0, (nb2.Count - (amountnb2 + 1)));
-                    SwapAmount(nb2, swaprangenb21, swaprangenb22, amountnb2);
-                    break;
-                // swap het duurste order met een willekeurig order
-                case 11:
-                    Swap(nb1, MostExpensive(nb1), rnd.Next(0, nb1.Count));
-                    break;
-                case 12:
-                    Swap(nb2, MostExpensive(nb2), rnd.Next(0, nb2.Count));
-                    break;
-                // de remove cases werken nog niet goed
+                 
 
-                    /*
-                    //verwijder uit lijst 1 wordt bijgehouden met list<> removed
-                    case 13:
-                        if(nb1.Count > 1)
-                        {
-                            index = rnd.Next(0,nb1.Count);
-                            removed.Add(nb1[index].Clone());
-                            nb1.RemoveAt(index);
-                        }
-                        break;
-                    //omgekeerd
-                    case 14:
-                        if (nb2.Count > 1)
-                        {
-                            index = rnd.Next(0, nb2.Count);
-                            removed.Add(nb2[index].Clone());
-                            nb2.RemoveAt(index);
-                        }
-                        break;
-                    //bugged
-                    //makes orders disappear   
-
-                    case 15:
-                        if (removed.Count > 0)
-                        { 
-                            index = rnd.Next(0, removed.Count);
-                            nb1.Add(removed[index].Clone());
-                            removed.RemoveAt(index);
-                        }
-                        break;
-                    case 16:
-                        if (removed.Count > 0)
-                        { 
-                            index = rnd.Next(0, removed.Count);
-                            nb2.Add(removed[index].Clone());
-                            removed.RemoveAt(index);
-                        }
-                        break;
-                      */
-            }           
-
-            return new Tuple<List<Order>, List<Order>>(nb1, nb2);
+            return new Tuple<List<Order>[], List<Order>[]>(nb1, nb2);
         }
         
         //maak een copie van een list
@@ -422,7 +344,7 @@ namespace GO
         }
 
         //berekend de score van een state
-        static float Eval(List<Order> input1, List<Order> input2)
+        static float Eval(List<Order>[] input1, List<Order>[] input2)
         {
             totalStortTime = 0;
             float score = 0;
@@ -451,93 +373,95 @@ namespace GO
         }
 
         //brekend de score van een enkele auto
-        static float CalcCost(List<Order> input, Dictionary<int, Tuple<int,int>> timesVisited)
+        static float CalcCost(List<Order>[] input, Dictionary<int, Tuple<int,int>> timesVisited)
         {
-            int day = 1;
+            int day;
             float cost = 0, time = 0, currentLoad = 0;
-            for (int i = 0; i < input.Count - 1; i++)
+            for (int j = 0; j < 5; j++)
             {
-                float totalVolume = input[i].volume * input[i].aantContainers * 0.2f;
-                int id = input[i].matrixID, nextID = input[i + 1].matrixID;
-                if (time == 0)
-                    time += afstanden[287, id].Item2;
-
-                //behandel eerst het ophalen van het afval van deze locatie
-
-                //als er meerdere keren opgehaald moet worden
-                if (orderFreqs.ContainsKey(input[i].id))
+                day = j + 1;
+                for (int i = 0; i < input[j].Count - 1; i++)
                 {
-                    Tuple<int, float> freq = orderFreqs[input[i].id];
-                    bool visitedOnce = timesVisited.ContainsKey(input[i].id);
-                    Tuple<int, int> times = new Tuple<int, int>(0,0);
-                    if (visitedOnce)
-                        times = timesVisited[input[i].id];                    
-                    //als er nog nooit is opgehaald
-                    if (!visitedOnce)
+                    float totalVolume = input[j][i].volume * input[j][i].aantContainers * 0.2f;
+                    int id = input[j][i].matrixID, nextID = input[j][i + 1].matrixID;
+                    if (time == 0)
+                        time += afstanden[287, id].Item2;
+
+                    //behandel eerst het ophalen van het afval van deze locatie
+
+                    //als er meerdere keren opgehaald moet worden
+                    if (orderFreqs.ContainsKey(input[j][i].id))
                     {
-                        time += input[i].ledigingsDuur;
-                        currentLoad += totalVolume;
-                        timesVisited.Add(input[i].id, new Tuple<int, int>(1, day));
+                        Tuple<int, float> freq = orderFreqs[input[j][i].id];
+                        bool visitedOnce = timesVisited.ContainsKey(input[j][i].id);
+                        Tuple<int, int> times = new Tuple<int, int>(0, 0);
+                        if (visitedOnce)
+                            times = timesVisited[input[i][j].id];
+                        //als er nog nooit is opgehaald
+                        if (!visitedOnce)
+                        {
+                            time += input[j][i].ledigingsDuur;
+                            currentLoad += totalVolume;
+                            timesVisited.Add(input[j][i].id, new Tuple<int, int>(1, day));
+                        }
+                        //als er al een keer opgehaald is moet er gekeken worden of dit de goede dag is om weer op te halen volgens het bijbehorende ophaalpatroon
+                        else if (times.Item1 != 0 && day - times.Item2 == 5 - freq.Item1 && freq.Item1 != times.Item2 || freq.Item1 == 5 && day != times.Item2)
+                        {
+                            time += input[j][i].ledigingsDuur;
+                            currentLoad += totalVolume;
+                            timesVisited[input[j][i].id] = new Tuple<int, int>(times.Item2 + 1, day);
+                        }
                     }
-                    //als er al een keer opgehaald is moet er gekeken worden of dit de goede dag is om weer op te halen volgens het bijbehorende ophaalpatroon
-                    else if (times.Item1 != 0 && day - times.Item2 == 5 - freq.Item1 && freq.Item1 != times.Item2 || freq.Item1 == 5 && day != times.Item2)
-                    {
-                        time += input[i].ledigingsDuur;
-                        currentLoad += totalVolume;
-                        timesVisited[input[i].id] = new Tuple<int, int>(times.Item2 + 1, day);
-                    }
-                }
-                else
-                {
-                    time += input[i].ledigingsDuur;
-                    currentLoad += totalVolume;
-                }
-
-                float nextDestTime = afstanden[id, nextID].Item2;
-                float toStortTime = afstanden[id, 287].Item2;
-
-                //kijk daarna naar wat de volgende bestemming wordt
-
-                //720 min per dag zijn de autos beschikbaar
-                if (time + nextDestTime + afstanden[nextID, 287].Item2 + 30 >= 720)
-                {
-                    //terug naar stort aan het eind van de dag
-                    time += toStortTime + 30;
-                    cost += time;
-                    currentLoad = 0;
-                    time = 0;
-                    if (day == 5)
-                        day = 1;
                     else
-                        day++;
+                    {
+                        time += input[j][i].ledigingsDuur;
+                        currentLoad += totalVolume;
+                    }
 
-                    totalStortTime += toStortTime + 30;
-                }
-                else if (currentLoad + input[i + 1].volume * 0.2f > capacity)
-                {
-                    //naar stort en storten
-                    time += toStortTime + 30;
-                    currentLoad = 0;
-                    //naar volgende bestemming
-                    time += afstanden[287, nextID].Item2;
+                    float nextDestTime = afstanden[id, nextID].Item2;
+                    float toStortTime = afstanden[id, 287].Item2;
 
-                    totalStortTime += toStortTime + 30 + afstanden[287, nextID].Item2;
-                }
-                //storten als het onderweg kan 
-                else if (nextDestTime >= toStortTime + afstanden[287, nextID].Item2)
-                {
-                    //naar stort en storten
-                    time += toStortTime + 30;
-                    currentLoad = 0;
-                    //naar volgende bestemming
-                    time += afstanden[287, nextID].Item2;
+                    //kijk daarna naar wat de volgende bestemming wordt
 
-                    totalStortTime += toStortTime + 30 + afstanden[287, nextID].Item2;
+                    //720 min per dag zijn de autos beschikbaar
+                    if (time + nextDestTime + afstanden[nextID, 287].Item2 + 30 >= 720)
+                    {
+                        //terug naar stort aan het eind van de dag
+                        time += toStortTime + 30;
+                        cost += time;
+                        currentLoad = 0;
+                        time = 0;
+                        totalStortTime += toStortTime + 30;
+
+                        //NIET ALLE ORDERS IN EEN DAGLIJST HOEVEN BEHANDELD TE WORDEN
+
+                    }
+                    else if (currentLoad + input[j][i + 1].volume * 0.2f > capacity)
+                    {
+                        //naar stort en storten
+                        time += toStortTime + 30;
+                        currentLoad = 0;
+                        //naar volgende bestemming
+                        time += afstanden[287, nextID].Item2;
+
+                        totalStortTime += toStortTime + 30 + afstanden[287, nextID].Item2;
+                    }
+                    //storten als het onderweg kan 
+                    else if (nextDestTime >= toStortTime + afstanden[287, nextID].Item2)
+                    {
+                        //naar stort en storten
+                        time += toStortTime + 30;
+                        currentLoad = 0;
+                        //naar volgende bestemming
+                        time += afstanden[287, nextID].Item2;
+
+                        totalStortTime += toStortTime + 30 + afstanden[287, nextID].Item2;
+                    }
+                    else
+                        time += nextDestTime;
                 }
-                else
-                    time += nextDestTime;
+                cost += afstanden[input[j][input[j].Count - 1].matrixID, 287].Item2;
             }
-            cost += afstanden[input[input.Count - 1].matrixID, 287].Item2;
             return cost;
         }
     }
