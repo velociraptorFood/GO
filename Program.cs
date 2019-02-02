@@ -228,6 +228,8 @@ namespace GO
                 //t neemt iedere x iteraties af
                 if(k % 1000 == 0)
                     t = (float)Math.Pow(0.99, k);
+                //t neemt iedere iteratie af
+                t = (float)Math.Pow(0.99, (k / 1000));
             }
 
             Eval(bestAuto1, bestAuto2, true);
