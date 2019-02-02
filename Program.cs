@@ -219,7 +219,7 @@ namespace GO
                 }
                 k++;
                 //t neemt iedere iteratie af
-                t = (float)Math.Pow(0.99, k);
+                t = (float)Math.Pow(0.99, (k / 1000));
             }
             //Console.WriteLine("orders in cars: " + (bestAuto1.Count + bestAuto2.Count) + " removed orders: " + removed.Count);
             Console.WriteLine("storttime: " + totalStortTime);
