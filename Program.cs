@@ -194,7 +194,7 @@ namespace GO
         //gebruik simulated annealing om een oplossing te vinden
         static float Iterate(List<Order>[] auto1, List<Order>[] auto2, int limit)
         {
-            float minScore, t = 100;
+            float minScore, t = 10;
             int k = 0;
             Random r = new Random();
             minScore = Eval(auto1, auto2, false);
@@ -228,7 +228,7 @@ namespace GO
                 if(k % 10000 == 0)
                 {
                     t = t * 0.99f;
-                    Console.WriteLine(k);
+                    //Console.WriteLine(k);
                 }
 
             }
@@ -285,55 +285,55 @@ namespace GO
             }
             Random rnd = new Random();
             int index1, index2, index3, index4,
-                choice = rnd.Next(0,13);
+                choice = rnd.Next(0,100);
 
             //swap in nb1
-            if (choice == 0)
+            if (choice <= 5)
             {
                 index1 = rnd.Next(0, nb1.Length); index2 = rnd.Next(0, nb1.Length);
                 index3 = rnd.Next(0, 5);
                 Swap(nb1[index3], index1, index2);
             }
             //swap in nb2
-            else if (choice == 1)
+            else if (choice <= 10)
             {
                 index1 = rnd.Next(0, nb1.Length); index2 = rnd.Next(0, nb1.Length);
                 index3 = rnd.Next(0, 5);
                 Swap(nb2[index3], index1, index2);
             }
             //swap between nb1 and nb2
-            else if (choice == 2)
+            else if (choice <= 15)
             {
                 index1 = rnd.Next(0, nb1.Length); index2 = rnd.Next(0, nb1.Length);
                 index3 = rnd.Next(0, 5); index4 = rnd.Next(0, 5);
                 SwapBetween(nb1[index3],nb2[index3], index1, index2);
             }
             //remove from nb1
-            else if (choice == 3)
+            else if (choice <= 30)
             {
                 index1 = rnd.Next(0, 5); index2 = rnd.Next(0, nb1.Length);
                 Remove(nb1, index1, index2);
             }
             //remove from nb2
-            else if (choice == 4)
+            else if (choice <= 35)
             {
                 index1 = rnd.Next(0, 5); index2 = rnd.Next(0, nb2.Length);
                 Remove(nb2, index1, index2);
             }
             //add from remove on index2 to day index1 to nb1
-            else if (choice == 5)
+            else if (choice <= 45)
             {
                 index1 = rnd.Next(0, 5); index2 = rnd.Next(0, nb1[5].Count);
                 AddFromRemove(nb1, index1, index2);
             }
             //add from remove on index2 to day index1 to nb2
-            else if (choice == 6)
+            else if (choice <= 55)
             {
                 index1 = rnd.Next(0, 5); index2 = rnd.Next(0, nb2[5].Count);
                 AddFromRemove(nb2, index1, index2);
             }
             //move order from nb1 on any day or removed to any day or removed on nb2
-            else if (choice == 7)
+            else if (choice <= 60)
             {
                 index1 = rnd.Next(0, 6); index2 = rnd.Next(0, 6);
                 index3 = rnd.Next(0, nb1[index1].Count);
@@ -341,7 +341,7 @@ namespace GO
                     Shift(nb1[index1], nb2[index2], index3);
             }
             //move order from nb2 on any day or removed to any day or removed on nb1
-            else if (choice == 8)
+            else if (choice <= 65)
             {
                 index1 = rnd.Next(0, 6); index2 = rnd.Next(0, 6);
                 index3 = rnd.Next(0, nb2[index1].Count);
@@ -349,19 +349,19 @@ namespace GO
                     Shift(nb2[index1], nb1[index2], index3);
             }
             //shift from nb2 removed to a random day in nb1
-            else if (choice == 9)
+            else if (choice <= 75)
             {
                 index1 = rnd.Next(0, 5); index2 = rnd.Next(0, nb2[5].Count);
                 Shift(nb2[5], nb1[index1], index2);
             }
             //shift from nb1 removed to a random day in nb2
-            else if (choice == 10)
+            else if (choice <= 85)
             {
                 index1 = rnd.Next(0, 5); index2 = rnd.Next(0, nb2[5].Count);
                 Shift(nb1[5], nb2[index1], index2);
             }
             //add extra stort to nb1
-            else if (choice == 11)
+            else if (choice <= 90)
             {
                 Order o = new Order();
                 o.stort = true;
@@ -369,14 +369,14 @@ namespace GO
                 nb1[index1].Insert(index2, o);
             }
             //add extra stort to nb2
-            else if (choice == 12)
+            else if (choice <= 95)
             {
                 Order o = new Order();
                 o.stort = true;
                 index1 = rnd.Next(0, 5); index2 = rnd.Next(0, nb2[index1].Count);
                 nb2[index1].Insert(index2, o);
             }
-            else if (choice == 13)
+            else if (choice < 100)
             {
                 SwapRemoveLists(nb1, nb2);
             }
