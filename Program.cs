@@ -157,7 +157,7 @@ namespace GO
                 else
                     auto2[4].Add(orderList[i].Clone());
             }           
-            return Iterate(auto1, auto2, 100000);
+            return Iterate(auto1, auto2, 10000000);
         }
 
 
@@ -225,7 +225,7 @@ namespace GO
                 }
                 k++;
                 //t neemt iedere x iteraties af
-                if(k % 1000 == 0)
+                if(k % 10000 == 0)
                     t = k * 0.99f;
             }
 
@@ -281,7 +281,7 @@ namespace GO
             }
             Random rnd = new Random();
             int index1, index2, index3, index4,
-                choice = rnd.Next(0,11);
+                choice = rnd.Next(0,13);
 
             //swap in nb1
             if (choice == 0)
@@ -333,14 +333,16 @@ namespace GO
             {
                 index1 = rnd.Next(0, 6); index2 = rnd.Next(0, 6);
                 index3 = rnd.Next(0, nb1[index1].Count);
-                Shift(nb1[index1], nb2[index2], index3);
+                if(!(index2 == 6 && nb1[index1][index3].stort))
+                    Shift(nb1[index1], nb2[index2], index3);
             }
             //move order from nb2 on any day or removed to any day or removed on nb1
             else if (choice == 8)
             {
                 index1 = rnd.Next(0, 6); index2 = rnd.Next(0, 6);
                 index3 = rnd.Next(0, nb2[index1].Count);
-                Shift(nb2[index1], nb1[index2], index3);
+                if (!(index2 == 6 && nb2[index1][index3].stort))
+                    Shift(nb2[index1], nb1[index2], index3);
             }
             //shift from nb2 removed to a random day in nb1
             else if (choice == 9)
@@ -353,6 +355,22 @@ namespace GO
             {
                 index1 = rnd.Next(0, 5); index2 = rnd.Next(0, nb2[5].Count);
                 Shift(nb1[5], nb2[index1], index2);
+            }
+            //add extra stort to nb1
+            else if (choice == 11)
+            {
+                Order o = new Order();
+                o.stort = true;
+                index1 = rnd.Next(0, 5); index2 = rnd.Next(0, nb1[index1].Count);
+                nb1[index1].Insert(index2, o);
+            }
+            //add extra stort to nb2
+            else if (choice == 12)
+            {
+                Order o = new Order();
+                o.stort = true;
+                index1 = rnd.Next(0, 5); index2 = rnd.Next(0, nb2[index1].Count);
+                nb2[index1].Insert(index2, o);
             }
 
 
@@ -373,9 +391,13 @@ namespace GO
 
         static void Remove(List<Order>[] input, int x, int y)
         {
-            if (y < input[x].Count)
+            if (y < input[x].Count && !input[x][y].stort)
             {
                 input[5].Add(input[x][y]);
+                input[x].RemoveAt(y);
+            }
+            else if (y < input[x].Count)
+            {
                 input[x].RemoveAt(y);
             }
         }
@@ -507,107 +529,125 @@ namespace GO
                 day = j + 1; stops = 1;
                 for (int i = 0; i < input[j].Count; i++)
                 {
-                    if (final)
-                        sol.Add(autonr + "; " + (j + 1) + "; " + stops + "; " + input[j][i].id);
-                    stops++;
-
-                    float totalVolume = input[j][i].volume * input[j][i].aantContainers * 0.2f;
                     int id = input[j][i].matrixID;
-                    if (time == 0)
-                        time += afstanden[287, id].Item2 / 60;
-
-                    //behandel eerst het ophalen van het afval van deze locatie
-
-                    //als er meerdere keren opgehaald moet worden
-                    if (orderFreqs.ContainsKey(input[j][i].id))
-                    {
-                        Tuple<int, float> freq = orderFreqs[input[j][i].id];
-                        bool visitedOnce = timesVisited.ContainsKey(input[j][i].id);
-                        Tuple<int, int> times = new Tuple<int, int>(0, 0);
-                        if (visitedOnce)
-                            times = timesVisited[input[j][i].id];
-                        //als er nog nooit is opgehaald
-                        if (!visitedOnce)
-                        {
-                            time += input[j][i].ledigingsDuur;
-                            currentLoad += totalVolume;
-                            timesVisited.Add(input[j][i].id, new Tuple<int, int>(1, day));
-                        }
-                        //als er al een keer opgehaald is moet er gekeken worden of dit de goede dag is om weer op te halen volgens het bijbehorende ophaalpatroon
-                        else if (times.Item1 != 0 && day - times.Item2 == 5 - freq.Item1 && freq.Item1 != times.Item2 || freq.Item1 == 5 && day != times.Item2)
-                        {
-                            time += input[j][i].ledigingsDuur;
-                            currentLoad += totalVolume;
-                            timesVisited[input[j][i].id] = new Tuple<int, int>(times.Item2 + 1, day);
-                        }
-                    }
-                    else
-                    {
-                        time += input[j][i].ledigingsDuur;
-                        currentLoad += totalVolume;
-                    }
-
                     float toStortTime = afstanden[id, 287].Item2 / 60;
-
-                    //kijk daarna naar wat de volgende bestemming wordt
-
-                    if (i == input[j].Count - 1)
+                    if (input[j][i].stort && i < input[j].Count - 1)
                     {
                         if (final)
-                            sol.Add(autonr + "; " + (j + 1) + "; " + stops + "; " + 0);
+                            sol.Add(autonr + "; " + (j + 1) + "; " + stops + "; " + 0 + " extra");
                         stops++;
+                        //naar stort en storten
+                        time += toStortTime + 30;
                         currentLoad = 0;
-                        cost += toStortTime + 30;
+                        //naar volgende bestemming
+                        int nextID = input[j][i + 1].matrixID;
+                        time += afstanden[287, nextID].Item2 / 60;
+
+                        totalStortTime += toStortTime + 30 + (afstanden[287, nextID].Item2 / 60);
                     }
                     else
                     {
-                        int nextID = input[j][i + 1].matrixID;
-                        float nextDestTime = afstanden[id, nextID].Item2 / 60;
-                        //720 min per dag zijn de autos beschikbaar
-                        if (time + nextDestTime + (afstanden[nextID, 287].Item2 /60) + 30 >= 720)
+
+
+                        if (final)
+                            sol.Add(autonr + "; " + (j + 1) + "; " + stops + "; " + input[j][i].id);
+                        stops++;
+
+                        float totalVolume = input[j][i].volume * input[j][i].aantContainers * 0.2f;
+                        if (time == 0)
+                            time += afstanden[287, id].Item2 / 60;
+
+                        //behandel eerst het ophalen van het afval van deze locatie
+
+                        //als er meerdere keren opgehaald moet worden
+                        if (orderFreqs.ContainsKey(input[j][i].id))
                         {
-                            if (final)
-                                sol.Add(autonr + "; " + (j + 1) + "; " + stops + "; " + 0);
-                            //terug naar stort aan het eind van de dag
-                            time += toStortTime + 30;
-                            currentLoad = 0;
-                            totalStortTime += toStortTime + 30;
-                            for (int z = i + 1; z < input[j].Count; z++)
+                            Tuple<int, float> freq = orderFreqs[input[j][i].id];
+                            bool visitedOnce = timesVisited.ContainsKey(input[j][i].id);
+                            Tuple<int, int> times = new Tuple<int, int>(0, 0);
+                            if (visitedOnce)
+                                times = timesVisited[input[j][i].id];
+                            //als er nog nooit is opgehaald
+                            if (!visitedOnce)
                             {
-                                Remove(input, j, z);
+                                time += input[j][i].ledigingsDuur;
+                                currentLoad += totalVolume;
+                                timesVisited.Add(input[j][i].id, new Tuple<int, int>(1, day));
                             }
-                            break;
-                        }
-                        else if (currentLoad + input[j][i + 1].volume * input[j][i + 1].aantContainers * 0.2f > capacity)
-                        {
-                            if (final)
-                                sol.Add(autonr + "; " + (j + 1) + "; " + stops + "; " + 0);
-                            stops++;
-                            //naar stort en storten
-                            time += toStortTime + 30;
-                            currentLoad = 0;
-                            //naar volgende bestemming
-                            time += afstanden[287, nextID].Item2 / 60;
-
-                            totalStortTime += toStortTime + 30 + (afstanden[287, nextID].Item2 / 60);
-                        }
-                        //storten als het onderweg kan 
-                        else if (nextDestTime >= toStortTime + (afstanden[287, nextID].Item2 / 60))
-                        {
-                            if (final)
-                                sol.Add(autonr + "; " + (j + 1) + "; " + stops + "; " + 0);
-                            stops++;
-                            //naar stort en storten
-                            time += toStortTime + 30;
-                            currentLoad = 0;
-                            //naar volgende bestemming
-                            time += afstanden[287, nextID].Item2 / 60;
-
-                            totalStortTime += toStortTime + 30 + (afstanden[287, nextID].Item2 / 60);
+                            //als er al een keer opgehaald is moet er gekeken worden of dit de goede dag is om weer op te halen volgens het bijbehorende ophaalpatroon
+                            else if (times.Item1 != 0 && day - times.Item2 == 5 - freq.Item1 && freq.Item1 != times.Item2 || freq.Item1 == 5 && day != times.Item2)
+                            {
+                                time += input[j][i].ledigingsDuur;
+                                currentLoad += totalVolume;
+                                timesVisited[input[j][i].id] = new Tuple<int, int>(times.Item2 + 1, day);
+                            }
                         }
                         else
-                            time += nextDestTime;
-                    }                    
+                        {
+                            time += input[j][i].ledigingsDuur;
+                            currentLoad += totalVolume;
+                        }
+                        
+                        //kijk daarna naar wat de volgende bestemming wordt
+
+                        if (i == input[j].Count - 1)
+                        {
+                            if (final)
+                                sol.Add(autonr + "; " + (j + 1) + "; " + stops + "; " + 0);
+                            stops++;
+                            currentLoad = 0;
+                            cost += toStortTime + 30;
+                        }
+                        else
+                        {
+                            int nextID = input[j][i + 1].matrixID;
+                            float nextDestTime = afstanden[id, nextID].Item2 / 60;
+                            //720 min per dag zijn de autos beschikbaar
+                            if (time + nextDestTime + (afstanden[nextID, 287].Item2 / 60) + 30 >= 720)
+                            {
+                                if (final)
+                                    sol.Add(autonr + "; " + (j + 1) + "; " + stops + "; " + 0);
+                                //terug naar stort aan het eind van de dag
+                                time += toStortTime + 30;
+                                currentLoad = 0;
+                                totalStortTime += toStortTime + 30;
+                                for (int z = i + 1; z < input[j].Count; z++)
+                                {
+                                    Remove(input, j, z);
+                                }
+                                break;
+                            }
+                            else if (currentLoad + input[j][i + 1].volume * input[j][i + 1].aantContainers * 0.2f > capacity)
+                            {
+                                if (final)
+                                    sol.Add(autonr + "; " + (j + 1) + "; " + stops + "; " + 0);
+                                stops++;
+                                //naar stort en storten
+                                time += toStortTime + 30;
+                                currentLoad = 0;
+                                //naar volgende bestemming
+                                time += afstanden[287, nextID].Item2 / 60;
+
+                                totalStortTime += toStortTime + 30 + (afstanden[287, nextID].Item2 / 60);
+                            }
+                            //storten als het onderweg kan 
+                            else if (nextDestTime >= toStortTime + (afstanden[287, nextID].Item2 / 60))
+                            {
+                                if (final)
+                                    sol.Add(autonr + "; " + (j + 1) + "; " + stops + "; " + 0);
+                                stops++;
+                                //naar stort en storten
+                                time += toStortTime + 30;
+                                currentLoad = 0;
+                                //naar volgende bestemming
+                                time += afstanden[287, nextID].Item2 / 60;
+
+                                totalStortTime += toStortTime + 30 + (afstanden[287, nextID].Item2 / 60);
+                            }
+                            else
+                                time += nextDestTime;
+                        }
+                    }               
                 }
                 cost += time;
             }

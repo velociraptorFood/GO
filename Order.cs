@@ -11,6 +11,7 @@ namespace GO
         public string plaats;
         public int id, freq, aantContainers, volume, matrixID, x, y;
         public float ledigingsDuur;
+        public bool stort = false;
 
         public Order Clone()
         {
@@ -23,6 +24,7 @@ namespace GO
             o.matrixID = matrixID;
             o.x = x; o.y = y;
             o.ledigingsDuur = ledigingsDuur;
+            o.stort = stort;
             return o;
         }
 
