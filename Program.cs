@@ -11,14 +11,13 @@ namespace GO
     class Program
     {
         static Order[] orderList;
-        static Tuple<int, int>[,] afstanden;
+        static Tuple<int, float>[,] afstanden;
         static int capacity = 20000;
         static int orderCount;
         static float totalStortTime;
 
         //<orderID, <freq, kosten>>
         static Dictionary<int, Tuple<int, float>> orderFreqs = new Dictionary<int, Tuple<int, float>>();
-        static List<Order> removed = new List<Order>();
 
         //Ophalen orderlijst en bedrijvennetwerk uit bijbehorende bestanden
         static string[] orders = File.ReadAllLines(@"../../orders.txt");
@@ -49,11 +48,11 @@ namespace GO
             }
 
             //afstanden[punt A, punt B] = (afstand, rijtijd)
-            afstanden = new Tuple<int, int>[1099, 1099];
+            afstanden = new Tuple<int, float>[1099, 1099];
             for (int i = 0; i < bedrijvennetwerk.Length; i++)
             {
                 string[] split = bedrijvennetwerk[i].Split(';');
-                afstanden[int.Parse(split[0]), int.Parse(split[1])] = new Tuple<int, int>(int.Parse(split[2]), int.Parse(split[3]));
+                afstanden[int.Parse(split[0]), int.Parse(split[1])] = new Tuple<int, float>(int.Parse(split[2]), float.Parse(split[3]));
             }
 
             Console.WriteLine("best result: " + StartSmart());
@@ -158,7 +157,7 @@ namespace GO
                 else
                     auto2[4].Add(orderList[i].Clone());
             }           
-            return Iterate(auto1, auto2, 10000000);
+            return Iterate(auto1, auto2, 100000);
         }
 
 
@@ -169,7 +168,7 @@ namespace GO
             List<Order> sortedList = new List<Order>();
             Order best = new Order();
             int curLoc = 287, nextLoc = 287;
-            int minTime, curTime;
+            float minTime, curTime;
             foreach(Order o_ in input)
             {
                 minTime = int.MaxValue;
@@ -199,7 +198,7 @@ namespace GO
             int k = 0;
             Random r = new Random();
             minScore = Eval(auto1, auto2, false);
-            List<Order>[] bestAuto1 = new List<Order>[6], bestAuto2 = new List<Order>[6];
+            List<Order>[] bestAuto1 = auto1, bestAuto2 = auto2;
             //loop voor de iteraties
             while (k < limit)
             {
@@ -227,7 +226,7 @@ namespace GO
                 k++;
                 //t neemt iedere x iteraties af
                 if(k % 1000 == 0)
-                    t = (float)Math.Pow(0.99, k);
+                    t = k * 0.99f;
             }
 
             Eval(bestAuto1, bestAuto2, true);
@@ -253,7 +252,7 @@ namespace GO
         static int MostExpensive(List<Order> input)
         {
             int index = 0;
-            int time, maxTime = 0;
+            float time, maxTime = 0;
 
             for(int i = 0; i < input.Count; i++)
             {
@@ -282,57 +281,78 @@ namespace GO
             }
             Random rnd = new Random();
             int index1, index2, index3, index4,
-                choice = rnd.Next(0,9);
+                choice = rnd.Next(0,11);
 
+            //swap in nb1
             if (choice == 0)
             {
                 index1 = rnd.Next(0, nb1.Length); index2 = rnd.Next(0, nb1.Length);
                 index3 = rnd.Next(0, 5);
                 Swap(nb1[index3], index1, index2);
             }
+            //swap in nb2
             else if (choice == 1)
             {
                 index1 = rnd.Next(0, nb1.Length); index2 = rnd.Next(0, nb1.Length);
                 index3 = rnd.Next(0, 5);
                 Swap(nb2[index3], index1, index2);
             }
+            //swap between nb1 and nb2
             else if (choice == 2)
             {
                 index1 = rnd.Next(0, nb1.Length); index2 = rnd.Next(0, nb1.Length);
                 index3 = rnd.Next(0, 5); index4 = rnd.Next(0, 5);
                 SwapBetween(nb1[index3],nb2[index3], index1, index2);
             }
+            //remove from nb1
             else if (choice == 3)
             {
                 index1 = rnd.Next(0, 5); index2 = rnd.Next(0, nb1.Length);
                 Remove(nb1, index1, index2);
             }
+            //remove from nb2
             else if (choice == 4)
             {
                 index1 = rnd.Next(0, 5); index2 = rnd.Next(0, nb2.Length);
                 Remove(nb2, index1, index2);
             }
+            //add from remove on index2 to day index1 to nb1
             else if (choice == 5)
             {
                 index1 = rnd.Next(0, 5); index2 = rnd.Next(0, nb1[5].Count);
                 AddFromRemove(nb1, index1, index2);
             }
+            //add from remove on index2 to day index1 to nb2
             else if (choice == 6)
             {
                 index1 = rnd.Next(0, 5); index2 = rnd.Next(0, nb2[5].Count);
                 AddFromRemove(nb2, index1, index2);
             }
+            //move order from nb1 on any day or removed to any day or removed on nb2
             else if (choice == 7)
             {
                 index1 = rnd.Next(0, 6); index2 = rnd.Next(0, 6);
                 index3 = rnd.Next(0, nb1[index1].Count);
                 Shift(nb1[index1], nb2[index2], index3);
             }
+            //move order from nb2 on any day or removed to any day or removed on nb1
             else if (choice == 8)
             {
                 index1 = rnd.Next(0, 6); index2 = rnd.Next(0, 6);
                 index3 = rnd.Next(0, nb2[index1].Count);
                 Shift(nb2[index1], nb1[index2], index3);
+            }
+            //shift from nb2 removed to a random day in nb1
+            else if (choice == 9)
+            {
+                index1 = rnd.Next(0, 5); index2 = rnd.Next(0, nb2[5].Count);
+                Shift(nb2[5], nb1[index1], index2);
+            }
+            //shift from nb1 removed to a random day in nb2
+            else if (choice == 10)
+            {
+                index1 = rnd.Next(0, 5); index2 = rnd.Next(0, nb2[5].Count);
+                Shift(nb1[5], nb2[index1], index2);
             }
 
 
@@ -494,7 +514,7 @@ namespace GO
                     float totalVolume = input[j][i].volume * input[j][i].aantContainers * 0.2f;
                     int id = input[j][i].matrixID;
                     if (time == 0)
-                        time += afstanden[287, id].Item2;
+                        time += afstanden[287, id].Item2 / 60;
 
                     //behandel eerst het ophalen van het afval van deze locatie
 
@@ -527,7 +547,7 @@ namespace GO
                         currentLoad += totalVolume;
                     }
 
-                    float toStortTime = afstanden[id, 287].Item2;
+                    float toStortTime = afstanden[id, 287].Item2 / 60;
 
                     //kijk daarna naar wat de volgende bestemming wordt
 
@@ -542,16 +562,14 @@ namespace GO
                     else
                     {
                         int nextID = input[j][i + 1].matrixID;
-                        float nextDestTime = afstanden[id, nextID].Item2;
+                        float nextDestTime = afstanden[id, nextID].Item2 / 60;
                         //720 min per dag zijn de autos beschikbaar
-                        if (time + nextDestTime + afstanden[nextID, 287].Item2 + 30 >= 720)
+                        if (time + nextDestTime + (afstanden[nextID, 287].Item2 /60) + 30 >= 720)
                         {
                             if (final)
                                 sol.Add(autonr + "; " + (j + 1) + "; " + stops + "; " + 0);
-                            stops++;
                             //terug naar stort aan het eind van de dag
                             time += toStortTime + 30;
-                            cost += time;
                             currentLoad = 0;
                             totalStortTime += toStortTime + 30;
                             for (int z = i + 1; z < input[j].Count; z++)
@@ -560,7 +578,7 @@ namespace GO
                             }
                             break;
                         }
-                        else if (currentLoad + input[j][i + 1].volume * 0.2f > capacity)
+                        else if (currentLoad + input[j][i + 1].volume * input[j][i + 1].aantContainers * 0.2f > capacity)
                         {
                             if (final)
                                 sol.Add(autonr + "; " + (j + 1) + "; " + stops + "; " + 0);
@@ -569,12 +587,12 @@ namespace GO
                             time += toStortTime + 30;
                             currentLoad = 0;
                             //naar volgende bestemming
-                            time += afstanden[287, nextID].Item2;
+                            time += afstanden[287, nextID].Item2 / 60;
 
-                            totalStortTime += toStortTime + 30 + afstanden[287, nextID].Item2;
+                            totalStortTime += toStortTime + 30 + (afstanden[287, nextID].Item2 / 60);
                         }
                         //storten als het onderweg kan 
-                        else if (nextDestTime >= toStortTime + afstanden[287, nextID].Item2)
+                        else if (nextDestTime >= toStortTime + (afstanden[287, nextID].Item2 / 60))
                         {
                             if (final)
                                 sol.Add(autonr + "; " + (j + 1) + "; " + stops + "; " + 0);
@@ -583,14 +601,15 @@ namespace GO
                             time += toStortTime + 30;
                             currentLoad = 0;
                             //naar volgende bestemming
-                            time += afstanden[287, nextID].Item2;
+                            time += afstanden[287, nextID].Item2 / 60;
 
-                            totalStortTime += toStortTime + 30 + afstanden[287, nextID].Item2;
+                            totalStortTime += toStortTime + 30 + (afstanden[287, nextID].Item2 / 60);
                         }
                         else
                             time += nextDestTime;
                     }                    
                 }
+                cost += time;
             }
             return cost;
         }
