@@ -372,7 +372,10 @@ namespace GO
                 index1 = rnd.Next(0, 5); index2 = rnd.Next(0, nb2[index1].Count);
                 nb2[index1].Insert(index2, o);
             }
-
+            else if (choice == 13)
+            {
+                SwapRemoveLists(nb1, nb2);
+            }
 
             return new Tuple<List<Order>[], List<Order>[]>(nb1, nb2);
         }
@@ -409,6 +412,14 @@ namespace GO
                 input[x].Add(input[5][y]);
                 input[5].RemoveAt(y);
             }
+        }
+
+        static void SwapRemoveLists(List<Order>[] list1, List<Order>[] list2)
+        {
+            List<Order> templist = new List<Order>();
+            templist = list1[5];
+            list1[5] = list2[5];
+            list2[5] = templist;
         }
 
         static void Shift(List<Order> input1, List<Order> input2, int x)
