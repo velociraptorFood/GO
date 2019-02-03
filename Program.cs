@@ -194,7 +194,7 @@ namespace GO
         //gebruik simulated annealing om een oplossing te vinden
         static float Iterate(List<Order>[] auto1, List<Order>[] auto2, int limit)
         {
-            float minScore, t = 0;
+            float minScore, t = 100;
             int k = 0;
             Random r = new Random();
             minScore = Eval(auto1, auto2, false);
@@ -205,8 +205,8 @@ namespace GO
                 Tuple<List<Order>[], List<Order>[]> newAutos = GenerateNeighbours(auto1, auto2);
                 List<Order>[] newAuto1 = newAutos.Item1, newAuto2 = newAutos.Item2;
                 float newScore = Eval(newAuto1, newAuto2, false); float oldScore = Eval(auto1, auto2, false);
-                double p = Math.Exp(oldScore - newScore) / t;
-                if (newScore <= Eval(auto1, auto2,false))
+                double p = Math.Exp(-(newScore - oldScore) / t);
+                if (newScore <= oldScore)
                 {
                     auto1 = newAuto1;
                     auto2 = newAuto2;
@@ -226,7 +226,11 @@ namespace GO
                 k++;
                 //t neemt iedere x iteraties af
                 if(k % 10000 == 0)
-                    t = k * 0.99f;
+                {
+                    t = t * 0.99f;
+                    Console.WriteLine(k);
+                }
+
             }
 
             Eval(bestAuto1, bestAuto2, true);
